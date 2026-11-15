@@ -1,0 +1,1216 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Astronav | Interactive terrain map of Jezero Crater, Mars</title>
+<meta name="description" content="Astronav is an interactive planning map of Jezero Crater, Mars. Explore elevation, slope and walkability, example routes, key science stops and conditions measured by Perseverance.">
+<meta property="og:title" content="Astronav: Guiding humanity's first step on Mars">
+<meta property="og:description" content="An interactive terrain and walkability map of Jezero Crater, built on NASA and USGS data.">
+<style>
+  :root{
+    --bg:#090c12; --panel:#121723; --panel2:#0e131d; --line:#242d41; --line2:#33405c;
+    --text:#eaeef6; --muted:#9fabc4; --accent:#ff7a45; --accent2:#ffb067; --link:#8fd3ff;
+    --easy:#3cb44b; --med:#f5b82e; --hard:#e04646;
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+  body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+  a{color:var(--link)}
+  h1,h2,h3{line-height:1.2;margin:0}
+  h2{font-size:1.5rem;letter-spacing:-.01em;margin-bottom:.35rem}
+  h3{font-size:1.02rem;margin-bottom:.4rem}
+  p{margin:.4rem 0}
+  .sr{position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden}
+  .wrap{max-width:1280px;margin:0 auto;padding:0 20px}
+  .muted{color:var(--muted)}
+  .small{font-size:.86rem}
+  .eyebrow{font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent2);font-weight:700;margin-bottom:.5rem}
+  section{margin:56px 0;scroll-margin-top:72px}
+  .lead{font-size:1.1rem;color:var(--muted);max-width:70ch}
+
+  /* ---------- Nav ---------- */
+  .nav{position:sticky;top:0;z-index:50;background:rgba(9,12,18,.86);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .nav .wrap{display:flex;align-items:center;gap:20px;min-height:56px}
+  .brand{font-weight:800;letter-spacing:.18em;text-transform:uppercase;font-size:.95rem;color:#fff;text-decoration:none;display:flex;align-items:center;gap:10px}
+  .brand .logo{width:20px;height:20px;border-radius:50%;background:radial-gradient(circle at 35% 35%,var(--accent2),var(--accent) 55%,#7a2a10)}
+  .nav ul{list-style:none;display:flex;gap:4px;margin:0 0 0 auto;padding:0;overflow-x:auto;scrollbar-width:none}
+  .nav ul::-webkit-scrollbar{display:none}
+  .nav a.l{display:block;padding:8px 12px;border-radius:8px;color:var(--muted);text-decoration:none;font-size:.92rem;white-space:nowrap}
+  .nav a.l:hover{color:#fff;background:var(--panel)}
+  .nav a:focus-visible,.btn:focus-visible{outline:2px solid #fff;outline-offset:2px}
+
+  /* ---------- Hero ---------- */
+  .hero{background:#000;border-bottom:1px solid var(--line);text-align:center}
+  .hero img{display:block;margin:0 auto;max-width:100%;height:auto;max-height:340px;width:auto}
+  .intro{padding-top:44px}
+  .intro h1{font-size:clamp(2rem,4.6vw,3.2rem);letter-spacing:-.02em;margin-bottom:.8rem}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:28px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px}
+  .stat b{display:block;font-size:1.7rem;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+  .stat span{color:var(--muted);font-size:.88rem}
+
+  /* ---------- Cards ---------- */
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+
+  /* ---------- Map toolbar ---------- */
+  .toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:16px 0 14px}
+  .btn{font:inherit;font-size:.92rem;color:var(--text);background:var(--panel);border:1px solid var(--line2);border-radius:10px;min-height:40px;padding:0 14px;cursor:pointer}
+  .btn:hover{border-color:#6a7ba3;background:#182036}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#1a0c05;font-weight:700}
+  .btn.primary:hover{background:var(--accent2);border-color:var(--accent2)}
+  .btn[aria-pressed=true]{background:#2a3350;border-color:#8fa3d6}
+  select.btn{padding-right:8px;max-width:100%}
+  .toolbar .gap{flex:1}
+
+  /* ---------- Map ---------- */
+  .app{display:grid;grid-template-columns:330px 1fr;gap:16px;align-items:start}
+  .controls{display:flex;flex-direction:column;gap:12px}
+  .mapcol{min-width:0;display:flex;flex-direction:column;gap:12px}
+  .map{position:relative;overflow:hidden;height:clamp(440px,76vh,800px);background:#05070b;border:1px solid var(--line);border-radius:var(--radius);touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
+  .map{scroll-margin-top:72px}
+  .map.drag{cursor:grabbing}
+  .map.pathmode{cursor:crosshair}
+  .map:focus-visible{outline:2px solid #fff}
+  .map:fullscreen{height:100vh;border-radius:0}
+  #world{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}
+  .layer{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;user-select:none;-webkit-user-drag:none}
+  #routes{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}
+  .route-casing{fill:none;stroke:#0b0e14;stroke-width:8;vector-effect:non-scaling-stroke;stroke-linecap:round;stroke-linejoin:round}
+  .route-line{fill:none;stroke-width:4;vector-effect:non-scaling-stroke;stroke-linecap:round;stroke-linejoin:round}
+  g.hl .route-line{stroke-width:6}
+  g.hl .route-casing{stroke-width:10}
+  .plan-casing{fill:none;stroke:#0b0e14;stroke-width:11;vector-effect:non-scaling-stroke;stroke-linecap:round;stroke-linejoin:round}
+  .plan-line{fill:none;stroke-width:6;vector-effect:non-scaling-stroke;stroke-linecap:round;stroke-linejoin:round}
+  #world.planning g[id^=route-],#world.planning #direct-lines{opacity:.22}
+  .endpt{position:absolute;width:26px;height:26px;border-radius:50%;background:#fff;color:#0b0e14;font-weight:800;font-size:13px;display:grid;place-items:center;border:3px solid #0b0e14;box-shadow:0 0 0 2px #fff;pointer-events:none;
+       transform:translate(-50%,-50%) scale(calc(1 / var(--s,1)))}
+  .planner{margin:16px 0 0}
+  .plan-grid{display:grid;grid-template-columns:340px 1fr;gap:22px;align-items:start}
+  .plan-inputs{display:flex;flex-direction:column;gap:8px}
+  .plan-inputs label{display:flex;flex-direction:column;gap:4px;font-size:.84rem;color:var(--muted)}
+  .plan-inputs select{width:100%;color:var(--text)}
+  .plan-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 12px}
+  .plan-big{font-size:1.9rem;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+  #plan-result dl{margin:.6rem 0 0;display:grid;grid-template-columns:130px 1fr;gap:4px 10px;font-size:.93rem}
+  #plan-result dt{color:var(--muted)}
+  #plan-result dd{margin:0}
+  .direct-line{fill:none;stroke:#e6ebf5;stroke-opacity:.8;stroke-width:2;stroke-dasharray:3 6;vector-effect:non-scaling-stroke;stroke-linecap:round}
+  .path-casing{fill:none;stroke:#0b0e14;stroke-width:7;vector-effect:non-scaling-stroke;stroke-linecap:round;stroke-linejoin:round}
+  .path-line{fill:none;stroke:#fff;stroke-width:3;stroke-dasharray:2 7;vector-effect:non-scaling-stroke;stroke-linecap:round;stroke-linejoin:round}
+
+  .mapui{position:absolute;z-index:5;pointer-events:none}
+  .mapui > *{pointer-events:auto}
+  .zoombtns{left:10px;top:10px;display:flex;flex-direction:column;gap:6px}
+  .mbtn{font:inherit;color:var(--text);background:rgba(18,23,35,.92);border:1px solid var(--line2);border-radius:9px;min-width:38px;min-height:38px;padding:0 10px;cursor:pointer;font-size:1.05rem}
+  .mbtn:hover{border-color:#8fa3d6}
+  .mbtn:focus-visible{outline:2px solid #fff}
+  .north{right:12px;top:10px;text-align:center;font-weight:700;font-size:13px;color:#fff;background:rgba(9,12,18,.82);border-radius:9px;padding:4px 10px;line-height:1.1}
+  .north span{display:block;font-size:18px}
+  .scalebox{left:12px;bottom:10px;color:#fff;font-size:12px;background:rgba(9,12,18,.82);padding:5px 9px;border-radius:9px}
+  .scalebar{height:6px;border:2px solid #fff;border-top:0;margin-bottom:3px;width:80px}
+  .coords{right:12px;bottom:10px;color:#fff;font-size:12px;background:rgba(9,12,18,.82);padding:5px 9px;border-radius:9px;font-variant-numeric:tabular-nums}
+  .maphint{left:50%;top:12px;transform:translateX(-50%);background:rgba(255,122,69,.95);color:#1a0c05;font-weight:700;font-size:.85rem;padding:6px 14px;border-radius:999px;pointer-events:none!important}
+
+  #pins{position:absolute;left:0;top:0}
+  .pin{position:absolute;width:30px;height:30px;margin:0;padding:0;border:0;background:transparent;cursor:pointer;font:inherit;color:#fff;
+       transform:translate(-50%,-50%) scale(calc(1 / var(--s,1)))}
+  .pin .dot{position:absolute;left:50%;top:50%;width:16px;height:16px;transform:translate(-50%,-50%);border-radius:50%;border:2px solid #0b0e14;box-shadow:0 0 0 2px rgba(255,255,255,.92)}
+  .pin.science .dot{background:var(--accent)}
+  .pin.context .dot{background:rgba(11,14,20,.25);border:3px solid #8fd3ff;box-shadow:0 0 0 1px #0b0e14}
+  .pin.centre .dot{background:transparent;border:2px dashed #fff;box-shadow:0 0 0 1px #0b0e14}
+  .pin.base .dot{width:26px;height:26px;border:0;border-radius:0;box-shadow:none;background:#ffd34d;filter:drop-shadow(0 0 2px #000) drop-shadow(0 0 1px #000);
+       clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)}
+  .pin.sel .dot{box-shadow:0 0 0 3px #fff,0 0 14px 5px rgba(255,255,255,.65)}
+  .pin.base.sel .dot{filter:drop-shadow(0 0 4px #fff) drop-shadow(0 0 2px #000)}
+  .pin:focus-visible{outline:2px solid #fff;border-radius:50%}
+  .pin .label{position:absolute;white-space:nowrap;font-size:12px;font-weight:600;line-height:1.25;color:#fff;background:rgba(9,12,18,.86);padding:2px 7px;border-radius:5px;pointer-events:none}
+  .pin .label.top{bottom:100%;left:50%;transform:translateX(-50%)}
+  .pin .label.bottom{top:100%;left:50%;transform:translateX(-50%)}
+  .pin .label.left{right:100%;top:50%;transform:translateY(-50%)}
+  .pin .label.right{left:100%;top:50%;transform:translateY(-50%)}
+  .nolabels .pin .label{display:none}
+  .pathpt{position:absolute;width:14px;height:14px;border-radius:50%;background:#fff;border:3px solid #0b0e14;box-shadow:0 0 0 2px #fff;pointer-events:none;
+       transform:translate(-50%,-50%) scale(calc(1 / var(--s,1)))}
+
+  /* controls */
+  .layer-row{display:grid;grid-template-columns:1fr 96px;gap:8px;align-items:center;margin:8px 0 2px}
+  .layer-row label{display:flex;gap:8px;align-items:center;cursor:pointer}
+  .layer-row input[type=range]{width:100%;accent-color:var(--accent)}
+  input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent)}
+  .hint{font-size:.84rem;color:var(--muted);margin:0 0 6px 26px}
+  .missing{color:#ffb4a8;font-size:.84rem;margin:0 0 6px 26px}
+  .grad{height:14px;border-radius:7px;border:1px solid var(--line);background:linear-gradient(to right,rgb(40,70,160),rgb(60,160,100),rgb(230,220,120),rgb(150,100,60),rgb(250,250,250))}
+  .ticks{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-top:3px;font-variant-numeric:tabular-nums}
+  .sw{display:flex;align-items:center;gap:8px;margin:4px 0;font-size:.92rem}
+  .sw i{display:inline-block;width:22px;height:14px;border-radius:3px;border:1px solid rgba(255,255,255,.3)}
+  .legendline{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:.9rem}
+  .legendline .ln{display:inline-block;width:30px;height:0;border-top:4px solid;flex:none}
+  .legendline .ln.dash{border-top-style:dashed}
+  .keyicon{display:inline-block;width:14px;height:14px;border-radius:50%;flex:none}
+
+  /* details */
+  .badge{display:inline-block;padding:1px 9px;border-radius:999px;font-size:.78rem;font-weight:600;border:1px solid var(--line);margin-right:6px;white-space:nowrap}
+  .badge.official,.badge.easy{background:#12301c;border-color:#2c6a3f;color:#a5e8b8}
+  .badge.approx,.badge.medium{background:#3a2c0f;border-color:#8a6a1f;color:#ffd98a}
+  .badge.hard{background:#3d1717;border-color:#8c3030;color:#ffb4b4}
+  .badge.pending{background:#1b2236;border-color:#3d4b70;color:#c8d3ee}
+  #details h3{font-size:1.15rem}
+  #details dl{margin:.6rem 0 0;display:grid;grid-template-columns:110px 1fr;gap:4px 10px;font-size:.93rem}
+  #details dt{color:var(--muted)}
+  #details dd{margin:0}
+  .tourbar{display:flex;gap:8px;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid var(--line);flex-wrap:wrap}
+  .tourbar .muted{margin-right:auto}
+  #pathcard dl{margin:.5rem 0 0;display:grid;grid-template-columns:130px 1fr;gap:4px 10px;font-size:.93rem}
+  #pathcard dt{color:var(--muted)}
+  #pathcard dd{margin:0}
+  .bar{display:flex;height:10px;border-radius:5px;overflow:hidden;margin:6px 0;background:var(--line)}
+  .bar i{display:block;height:100%}
+
+  /* tables */
+  .tablewrap{overflow-x:auto}
+  table{border-collapse:collapse;width:100%;font-size:.93rem}
+  th,td{text-align:left;padding:10px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-weight:600;font-size:.8rem;text-transform:uppercase;letter-spacing:.04em}
+  td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+  ul.clean{margin:.4rem 0 0;padding-left:1.2rem}
+  ul.clean li{margin:.3rem 0}
+
+  /* conditions */
+  .cond h3{display:flex;align-items:center;gap:10px;font-size:1.1rem;margin-bottom:.6rem}
+  .cond .ico{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:#1c2438;font-size:1.1rem}
+  .metric{padding:10px 0;border-top:1px solid var(--line)}
+  .metric:first-of-type{border-top:0}
+  .metric b{display:block;font-size:1.45rem;letter-spacing:-.01em;font-variant-numeric:tabular-nums;line-height:1.2}
+  .metric span{color:var(--muted);font-size:.9rem}
+  .plan{margin-top:12px;padding:10px 12px;border-radius:10px;background:var(--panel2);border:1px solid var(--line);font-size:.9rem}
+  .plan strong{color:var(--accent2)}
+  .src{font-size:.82rem;margin-top:10px}
+
+  figure.fig{margin:0}
+  figure.fig img{width:100%;height:auto;border-radius:10px;border:1px solid var(--line);display:block}
+  figure.fig figcaption{font-size:.85rem;color:var(--muted);margin-top:6px}
+
+  footer{border-top:1px solid var(--line);margin-top:70px;padding:28px 0 48px;color:var(--muted);font-size:.9rem}
+  footer .wrap{display:flex;flex-wrap:wrap;gap:12px 28px;justify-content:space-between}
+
+  @media (max-width:980px){
+    .app{grid-template-columns:1fr}
+    .mapcol{order:1}
+    .controls{order:2}
+    .map{height:64vh;min-height:380px}
+    .grid2,.grid3,.plan-grid{grid-template-columns:1fr}
+    .stats{grid-template-columns:repeat(2,1fr)}
+    .hero img{max-height:210px}
+    section{margin:42px 0}
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav" aria-label="Main">
+  <div class="wrap">
+    <a class="brand" href="#top"><span class="logo" aria-hidden="true"></span>Astronav</a>
+    <ul>
+      <li><a class="l" href="#map-section">Map</a></li>
+      <li><a class="l" href="#routes-section">Routes</a></li>
+      <li><a class="l" href="#conditions">Conditions</a></li>
+      <li id="nav-imagery" hidden><a class="l" href="#imagery">Imagery</a></li>
+      <li><a class="l" href="#method">Method</a></li>
+      <li><a class="l" href="#credits">Credits</a></li>
+    </ul>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <h1 class="sr">Astronav: Guiding humanity's first step on Mars</h1>
+  <img src="images/banner.png" alt="Astronav: Guiding humanity's first step on Mars. Mars seen from space with stars above it.">
+</header>
+
+<main class="wrap">
+  <noscript><p class="card">This page needs JavaScript to show the interactive map.</p></noscript>
+
+  <section class="intro" id="overview">
+    <div class="eyebrow">Jezero Crater, Mars</div>
+    <h1>Plan the first Marswalk with the terrain in view</h1>
+    <p class="lead">Jezero is an ancient lake basin and the landing site of NASA's Perseverance rover. Astronav brings elevation, slope and walkability into one interactive map, with the science stops, example routes and measured conditions an astronaut would weigh before stepping outside.</p>
+    <div class="stats" aria-label="Key figures">
+      <div class="stat"><b>47.5 km</b><span>Crater diameter</span></div>
+      <div class="stat"><b>3,029 m</b><span>Elevation range in the mapped area</span></div>
+      <div class="stat"><b>20 m</b><span>Terrain data resolution</span></div>
+      <div class="stat"><b>3</b><span>Routes with a slope-checked safe path</span></div>
+    </div>
+  </section>
+
+  <section id="map-section" aria-label="Interactive map of Jezero Crater">
+    <div class="eyebrow">Explore</div>
+    <h2>Interactive terrain map</h2>
+    <p class="muted">Drag to move, scroll or pinch to zoom, and select a marker for details. Switch on the slope layer to see where the ground is easy, harder or too steep.</p>
+
+    <div class="card" style="margin:14px 0 0;border-left:4px solid var(--accent)"><strong>Science objective.</strong> Sample the delta front layers for evidence of past water and possible life.</div>
+
+    <div class="card planner" id="route-planner">
+      <div class="plan-grid">
+        <div class="plan-inputs">
+          <h3>Route planner</h3>
+          <label for="plan-from">Start<select class="btn" id="plan-from"></select></label>
+          <button class="btn" id="plan-swap" aria-label="Swap start and destination">⇅ Swap</button>
+          <label for="plan-to">Destination<select class="btn" id="plan-to"></select></label>
+          <p class="small muted" style="margin:4px 0 0">Choose any two places. Astronav finds the gentlest path and rates it.</p>
+        </div>
+        <div id="plan-result" aria-live="polite"><p class="muted">Choose a start and a destination.</p></div>
+      </div>
+    </div>
+
+    <div class="toolbar" role="group" aria-label="Map tools">
+      <label class="sr" for="goto">Go to a place</label>
+      <select class="btn" id="goto"><option value="">Go to a place…</option></select>
+      <button class="btn" id="zone-btn">Spacewalk zone: delta</button>
+      <button class="btn primary" id="tour-btn">▶ Guided tour</button>
+      <button class="btn" id="path-btn" aria-pressed="false">Check a path</button>
+      <span class="gap"></span>
+      <button class="btn" id="share-btn">Copy link</button>
+      <button class="btn" id="fs-btn">Full screen</button>
+    </div>
+
+    <div class="app">
+      <aside class="controls" aria-label="Map controls">
+        <div class="card">
+          <h3>Layers</h3>
+          <div id="layerlist"></div>
+          <div class="layer-row" style="margin-top:12px"><label><input type="checkbox" id="chk-labels" checked> Show labels</label><span></span></div>
+        </div>
+
+        <div class="card" id="legend-elevation">
+          <h3>Elevation</h3>
+          <div class="grad" role="img" aria-label="Colour bar from blue (lowest) to white (highest)"></div>
+          <div class="ticks"><span>−3243 m</span><span>−2719</span><span>−2195</span><span>−1671</span><span>−1147 m</span></div>
+          <p class="small muted" style="margin-top:8px">Blue is this height or lower, white is this height or higher. Heights are relative to the reference level in the USGS data. Mars has no sea level.</p>
+        </div>
+
+        <div class="card" id="legend-slope">
+          <h3>Slope and walkability</h3>
+          <div class="sw"><i style="background:#3cb44b"></i> Under 10°: easy</div>
+          <div class="sw"><i style="background:#fac828"></i> 10° to 20°: harder</div>
+          <div class="sw"><i style="background:#dc3232"></i> Over 20°: very steep, avoid</div>
+          <p class="small muted" style="margin-top:8px">The 20° limit matches the slope NASA's lunar surface suit is required to handle (Moon). The 10° "easy" limit is a planning assumption.</p>
+        </div>
+
+        <div class="card">
+          <h3>Routes</h3>
+          <div id="routelist"></div>
+          <div class="legendline" style="margin-top:8px"><span class="ln dash" style="border-color:#ddd"></span> Dashed: rover-assisted trip</div>
+        </div>
+
+        <div class="card">
+          <h3>Key</h3>
+          <div class="legendline"><span class="keyicon" style="background:#ffd34d;clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);border-radius:0"></span> Base (landing site)</div>
+          <div class="legendline"><span class="keyicon" style="background:var(--accent)"></span> Science stop</div>
+          <div class="legendline"><span class="keyicon" style="border:3px solid #8fd3ff"></span> Valley (context)</div>
+          <div class="legendline"><span class="keyicon" style="border:2px dashed #fff"></span> Crater centre</div>
+        </div>
+      </aside>
+
+      <div class="mapcol">
+        <div class="map" id="map" tabindex="0" role="application" aria-label="Map of Jezero Crater. Use arrow keys to move and plus or minus to zoom.">
+          <div id="world"></div>
+          <div class="mapui zoombtns">
+            <button class="mbtn" id="zin" aria-label="Zoom in">+</button>
+            <button class="mbtn" id="zout" aria-label="Zoom out">−</button>
+            <button class="mbtn" id="zreset" aria-label="Reset view" title="Reset view">⌂</button>
+          </div>
+          <div class="mapui north" aria-hidden="true"><span>↑</span>N</div>
+          <div class="mapui scalebox" aria-hidden="true"><div class="scalebar" id="scalebar"></div><span id="scalelabel">10 km</span></div>
+          <div class="mapui coords" id="coords" aria-live="off">Move over the map</div>
+          <div class="mapui maphint" id="maphint" hidden>Click the map to add points</div>
+        </div>
+
+        <div class="card" id="pathcard" hidden aria-live="polite"></div>
+
+        <div class="card" id="details" aria-live="polite">
+          <h3>Stop details</h3>
+          <p class="muted">Select a marker on the map, pick a place from the list above, or start the guided tour.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="routes-section">
+    <div class="eyebrow">Routes</div>
+    <h2>Safe routes from the base</h2>
+    <p class="muted">For each trip, Astronav compares the direct straight line with a safe path found by searching the terrain for the gentlest way through. Each cell below shows the verdict, then distance · steepest slope · total climbing.</p>
+    <div class="card" style="margin-top:14px">
+      <div class="tablewrap">
+        <table id="routetable">
+          <thead><tr><th>Route</th><th>How</th><th>Direct line</th><th>Safe route</th><th>What the safe route changes</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <ul class="clean small muted">
+        <li><strong>Verdict</strong> uses the limits above: easy under 10°, medium 10° to 20°, hard over 20°.</li>
+        <li><strong>Total climbing</strong> adds up every uphill step along the line, so small bumps in the data count too.</li>
+        <li>Safe paths are found by searching 40 m cells, avoiding cells steeper than 20° and favouring flatter ground. All three safe paths stay below 20°.</li>
+        <li>The terrain data cannot show boulders or rock formations, so the safe path avoids steep ground only. Rock hazards need higher-resolution imagery.</li>
+        <li>The distance a suited astronaut can walk is not modelled here, so long trips are shown as rover-assisted.</li>
+      </ul>
+    </div>
+
+    <div class="card" id="planner" style="margin-top:16px">
+      <h3>Spacewalk fit</h3>
+      <p class="muted small">How each safe route fits inside one spacewalk. Move the sliders to test other assumptions.</p>
+      <div class="grid2" style="margin:10px 0 6px">
+        <label>Walking speed <b id="v-speed">2.0 km/h</b><br><input type="range" id="speed" min="1" max="3" step="0.1" value="2" style="width:100%;accent-color:var(--accent)"></label>
+        <label>Spacewalk length <b id="v-eva">6 h</b><br><input type="range" id="eva" min="4" max="8" step="0.5" value="6" style="width:100%;accent-color:var(--accent)"></label>
+      </div>
+      <div class="tablewrap">
+        <table id="fittable">
+          <thead><tr><th>Route</th><th>Round trip</th><th>Walking time</th><th>Time left on site</th><th>Result</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <ul class="clean small muted">
+        <li><strong>Reference values.</strong> Mars surface gravity is 0.376 g, about 3.71 m/s² (<a href="https://www.universetoday.com/articles/gravity-on-mars" target="_blank" rel="noopener">Universe Today</a>). NASA's lunar surface suit requirements, which are for the Moon and not Mars, call for walking up, down and across slopes of up to 20°, spacewalks of up to 8 hours (6 ± 2 hours), and traverses of up to 2 km from the lander at about 2 km/h on level ground (<a href="https://ntrs.nasa.gov/api/citations/20210000827/downloads/Exporation%20EVA%20Testing%20and%20Analogs%2020210000827.pdf" target="_blank" rel="noopener">NASA NTRS</a>).</li>
+        <li><strong>Assumptions.</strong> A result of "Fits" needs at least 2 hours left on site for sampling. Walking time ignores slowdown from slope, suit and equipment load, and Mars has no approved suit standard yet, so the lunar values are a reference only.</li>
+      </ul>
+    </div>
+
+    <h2 style="margin-top:40px">Places on the map</h2>
+    <div class="card" style="margin-top:10px">
+      <div class="tablewrap">
+        <table id="stoptable">
+          <thead><tr><th>Place</th><th>Kind</th><th>Latitude</th><th>Longitude</th><th>Position</th><th>From base</th><th>How to reach</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="small muted">Distances from the base are straight-line values calculated from the coordinates. "Official" positions use published gazetteer coordinates. "Approximate" positions were estimated from imagery.</p>
+    </div>
+  </section>
+
+  <section id="conditions">
+    <div class="eyebrow">Conditions at Jezero</div>
+    <h2>What Perseverance has measured</h2>
+    <p class="muted">Readings from the MEDA weather station on the Perseverance rover and NASA reports about it. Only Jezero measurements are shown here.</p>
+    <div class="grid3" id="condgrid" style="margin-top:16px"></div>
+    <p class="small muted" style="margin-top:12px">Planning notes are Astronav's interpretation of these readings and are not NASA guidance. Radiation dose at Jezero is not yet included.</p>
+  </section>
+
+  <section id="imagery" hidden>
+    <div class="eyebrow">Imagery</div>
+    <h2>Views of Jezero</h2>
+    <div id="viewlist" class="grid2" style="margin-top:14px"></div>
+  </section>
+
+  <section id="method">
+    <div class="eyebrow">Method</div>
+    <h2>How the map is made, and its limits</h2>
+    <div class="grid2" style="margin-top:14px">
+      <div class="card">
+        <h3>Method</h3>
+        <ul class="clean">
+          <li>Elevation comes from a 20 m terrain model of Jezero built from Mars Reconnaissance Orbiter CTX images.</li>
+          <li>Slope is the steepness between neighbouring 20 m cells. Relief shading is lit from the north-west to make the shape of the land readable.</li>
+          <li>Each cell is coloured easy, harder or very steep using the 10° and 20° limits.</li>
+          <li>Route and path distances use the Mars radius (3,396 km), about 59.3 km per degree of latitude.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Limits</h3>
+        <ul class="clean">
+          <li>With 20 m cells, boulders and small cliffs cannot be seen. Slope stands in for hazards and does not guarantee safety.</li>
+          <li>The 10° "easy" limit and the choice of example routes are planning assumptions. The 20° limit follows NASA's lunar suit requirement, which is for the Moon and not Mars.</li>
+          <li>Places marked "Approximate" are estimated from imagery. Only "Official" places use published coordinates.</li>
+          <li>This is a planning aid for study and demonstration, not a flight tool.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="credits">
+    <div class="eyebrow">Credits</div>
+    <h2>Data and sources</h2>
+    <div class="card" style="margin-top:14px">
+      <ul class="clean">
+        <li><strong>Elevation, slope and relief shading:</strong> Calef, F. (2021). <em>Mars 2020 Science Investigation CTX DEM Mosaic.</em> USGS Astrogeology Science Center and NASA Planetary Data System, from Mars Reconnaissance Orbiter CTX images. Public domain. Slope and shading are derived from this model. <a href="https://astrogeology.usgs.gov/search/map/mars_2020_science_investigation_ctx_dem_mosaic" target="_blank" rel="noopener">Source page</a></li>
+        <li><strong>Place names and coordinates</strong> for Jezero, Neretva Vallis, Sava Vallis and Pliva Vallis: IAU Gazetteer of Planetary Nomenclature, USGS Astrogeology. <a href="https://planetarynames.wr.usgs.gov/" target="_blank" rel="noopener">planetarynames.wr.usgs.gov</a></li>
+        <li><strong>Mission context and conditions:</strong> NASA/JPL-Caltech Mars 2020 mission pages and the MEDA instrument team, as linked beside each reading. Landing site and delta context also from DLR (HRSC).</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="about" class="card">
+    <h2>About Astronav</h2>
+    <div id="about-text"></div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>Astronav. Guiding humanity's first step on Mars.</div>
+    <div>Built for the NASA International Space Apps Challenge 2026. Not affiliated with or endorsed by NASA.</div>
+  </div>
+</footer>
+
+<script src="safe_routes.js"></script>
+<script>
+/* =====================================================================
+   ASTRONAV. Everything you may want to edit is in the "EDIT HERE" blocks.
+   The rest of the file draws the map and handles clicks.
+   ===================================================================== */
+(function () {
+'use strict';
+
+/* ---------- EDIT HERE 1: the map area (from the USGS page) ---------- */
+const GEO = { W: 2228, H: 2534, latMin: 17.58, latMax: 19.29, lonMin: 76.99, lonMax: 78.58, kmPerPx: 0.04 };
+const KM_PER_DEG = 2 * Math.PI * 3396.19 / 360;
+
+/* ---------- EDIT HERE 2: the layers (bottom first, top last) ---------- */
+const LAYERS = [
+  { id: 'hillshade', name: 'Relief shading',      file: 'images/hillshade.png',          on: true,  opacity: 1.0,
+    hint: 'A 3D-looking view of the land, lit from the north-west.' },
+  { id: 'elevation', name: 'Elevation (colour)',  file: 'images/elevation_colour.png',   on: true,  opacity: 0.6,
+    hint: 'Colour shows height: blue is low, white is high.', legend: 'legend-elevation' },
+  { id: 'slope',     name: 'Slope (walkability)', file: 'images/slope_walkability.png',  on: false, opacity: 0.8,
+    hint: 'Green is easy, yellow is harder, red is very steep.', legend: 'legend-slope' }
+];
+
+/* ---------- EDIT HERE 3: the places on the map ---------- */
+// status: 'official' (published coordinates) or 'approx' (estimated from imagery)
+// kind: 'base', 'science', 'context' or 'centre'.   label: where the name sits: top, bottom, left, right
+// zoom: how close the map flies to this place (0.6 = wide, 2 = close)
+const STOPS = [
+  { id: 'base', name: 'Base: landing site', kind: 'base', lat: 18.44, lon: 77.45, status: 'official', label: 'bottom', zoom: 1.5,
+    km: 0, access: 'Start and end point',
+    why: 'Every trip starts and ends here, on the western part of the crater floor close to the delta. Perseverance has gathered a lot of data nearby, which makes planning here well supported.',
+    source: 'Landing site coordinates from Wikipedia (Octavia E. Butler Landing). Confirm on a NASA mission page.' },
+  { id: 'floor', name: 'Crater floor sample site', kind: 'science', lat: 18.43, lon: 77.55, status: 'approx', label: 'top', zoom: 1.5,
+    km: 5.6, access: 'Walk',
+    why: 'Flat, low ground. The slope layer shows green here, so it is the safest place to start and to collect baseline samples. Rocks on a crater floor can help explain the crater\'s early history.',
+    source: 'Point chosen from the elevation and slope layers.' },
+  { id: 'delta', name: 'Delta front', kind: 'science', lat: 18.49, lon: 77.43, status: 'approx', label: 'left', zoom: 1.6,
+    km: 3.2, access: 'Walk with care',
+    why: 'The leading edge of an ancient river delta. Mud and sand were laid down here in layers that may record how long the lake lasted and whether conditions could have supported life. This is the main science target. The edge is steep, so walking is slower.',
+    source: 'Position estimated from published imagery of the delta (about 18.49° N, 77.43° E), within roughly 1 km. Approximate.' },
+  { id: 'neretva', name: 'Neretva Vallis', kind: 'context', lat: 18.55, lon: 77.20, status: 'official', label: 'top', zoom: 1.3,
+    km: 15.5, access: 'Rover-assisted',
+    why: 'An inflow valley on the western side that shows where water entered the lake. Its rocks tell scientists about the source of the delta. It is too far for a walk, so it is planned as a rover-assisted trip.',
+    source: 'IAU Gazetteer of Planetary Nomenclature (USGS). The valley is about 17 km long and the point is its centre.' },
+  { id: 'sava', name: 'Sava Vallis', kind: 'context', lat: 19.09, lon: 77.13, status: 'official', label: 'right', zoom: 0.9,
+    km: 42.5, access: 'Future target (too far)',
+    why: 'Another inflow valley, to the north-west and about 42 km from the base. Shown for context and as a possible future target.',
+    source: 'IAU Gazetteer of Planetary Nomenclature (USGS).' },
+  { id: 'pliva', name: 'Pliva Vallis', kind: 'context', lat: 18.67, lon: 78.35, status: 'official', label: 'bottom', zoom: 0.9,
+    km: 52.4, access: 'Future target (too far)',
+    why: 'The outflow valley on the eastern side, where water left the crater, about 52 km from the base. Shown for context and as a possible future target.',
+    source: 'IAU Gazetteer of Planetary Nomenclature (USGS).' },
+  { id: 'centre', name: 'Jezero (crater centre)', kind: 'centre', lat: 18.41, lon: 77.69, status: 'official', label: 'right', zoom: 0.9,
+    km: 13.6, access: 'Reference point',
+    why: 'The official centre of Jezero Crater, which is about 47.5 km across.',
+    source: 'IAU Gazetteer of Planetary Nomenclature (USGS).' }
+];
+
+// The order of the guided tour
+const TOUR = ['base', 'floor', 'delta', 'neretva', 'centre', 'sava', 'pliva'];
+
+/* ---------- EDIT HERE 4: the routes ---------- */
+// "points" are stop ids. The numbers come from the script make_slope_layer_simple.py.
+// Use null for steepest/climb/verdict while a route is waiting to be measured.
+// "direct" is the straight line between the stops. "safe" is the path found by plan_safe_routes.py
+// that avoids steep ground. The drawn line for the safe path is loaded from safe_routes.js.
+const ROUTES = [
+  { id: 'A', name: 'Route A: Base to crater floor',   points: ['base', 'floor'],   how: 'Walk',
+    direct: { km: 5.65,  steepest: 4.5,  climb: 29,   verdict: 'easy' },
+    safe:   { km: 5.74,  steepest: 4.4,  climb: 29,   verdict: 'easy' } },
+  { id: 'B', name: 'Route B: Base to delta front',    points: ['base', 'delta'],   how: 'Walk',
+    direct: { km: 3.17,  steepest: 26.1, climb: 115,  verdict: 'hard' },
+    safe:   { km: 3.34,  steepest: 5.1,  climb: 53,   verdict: 'easy' } },
+  { id: 'C', name: 'Route C: Base to Neretva Vallis', points: ['base', 'neretva'], how: 'Rover-assisted', dash: true,
+    direct: { km: 15.49, steepest: 25.7, climb: 1014, verdict: 'hard' },
+    safe:   { km: 16.39, steepest: 15.0, climb: 690,  verdict: 'medium' } }
+];
+
+/* ---------- EDIT HERE 5: conditions at Jezero (Perseverance / MEDA only) ---------- */
+const CONDITIONS = [
+  { title: 'Thermal', icon: '🌡',
+    items: [
+      { v: '−22 °C to −83 °C', l: 'Daily high and low on sols 43–44 (April 3–4, 2021)' },
+      { v: '≈ −20 °C → −25.6 °C', l: 'Surface temperature at the first recording, falling within 30 minutes' }
+    ],
+    plan: 'Nights are far colder than the day, so surface work is best planned for the warmer hours.',
+    src: { t: 'NASA: First weather report from Jezero Crater', u: 'https://www.nasa.gov/feature/nasa-s-first-weather-report-from-jezero-crater-on-mars' } },
+  { title: 'Atmosphere and wind', icon: '🌬',
+    items: [
+      { v: '718 Pa', l: 'Air pressure (models predicted 705–735 Pa)' },
+      { v: '≈ 10 m/s', l: 'Wind gusts, about 22 mph' }
+    ],
+    plan: 'The air is very thin, so even strong gusts push with little force, but they can lift dust.',
+    src: { t: 'NASA: First weather report from Jezero Crater', u: 'https://www.nasa.gov/feature/nasa-s-first-weather-report-from-jezero-crater-on-mars' } },
+  { title: 'Dust', icon: '🌫',
+    items: [
+      { v: 'Cleaner than Gale', l: 'The dust sensor showed a cleaner atmosphere at Jezero than at Gale Crater, about 3,700 km away' },
+      { v: 'Sol 117', l: 'Perseverance\'s Navcam imaged a gust of wind sweeping dust across the plain (June 18, 2021)' },
+      { v: 'Dust gusts', l: 'Gust lifting could potentially raise as much dust as all dust devils combined' }
+    ],
+    plan: 'Dust can reduce visibility and affect equipment, so plans need a margin for windy periods.',
+    src: { t: 'NASA: Everything is Dust in the Wind', u: 'https://science.nasa.gov/blog/everything-is-dust-in-the-wind/' } }
+];
+
+/* ---------- EDIT HERE 6: imagery (the section shows only when this list has items) ---------- */
+// Example: { title: 'Jezero delta and landing site', file: 'images/delta.jpg', credit: 'NASA/JPL-Caltech', url: 'https://...' }
+const SURFACE_VIEWS = [];
+
+/* ---------- EDIT HERE 7: the About text (plain text, one string per paragraph) ---------- */
+const ABOUT = [
+  'Astronav is an interactive planning map of Jezero Crater, Mars. It brings terrain, slope, example routes and measured conditions together so the ground can be understood before anyone steps onto it.'
+];
+
+/* ===================== Code below: no need to edit ===================== */
+
+const COLORS = { easy: '#3cb44b', medium: '#f5b82e', hard: '#e04646', pending: '#cfd8e8' };
+const $ = (s, el) => (el || document).querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const stopById = {}; STOPS.forEach(s => stopById[s.id] = s);
+const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function toXY(lat, lon) {
+  return { x: (lon - GEO.lonMin) / (GEO.lonMax - GEO.lonMin) * (GEO.W - 1),
+           y: (GEO.latMax - lat) / (GEO.latMax - GEO.latMin) * (GEO.H - 1) };
+}
+function toLatLon(x, y) {
+  return { lat: GEO.latMax - y / (GEO.H - 1) * (GEO.latMax - GEO.latMin),
+           lon: GEO.lonMin + x / (GEO.W - 1) * (GEO.lonMax - GEO.lonMin) };
+}
+function kmBetween(a, b) {
+  const mid = (a.lat + b.lat) / 2 * Math.PI / 180;
+  const dx = (b.lon - a.lon) * KM_PER_DEG * Math.cos(mid);
+  const dy = (b.lat - a.lat) * KM_PER_DEG;
+  return Math.hypot(dx, dy);
+}
+
+const map = $('#map'), world = $('#world');
+world.style.width = GEO.W + 'px';
+world.style.height = GEO.H + 'px';
+const MAXS = 3;
+let view = { s: 1, tx: 0, ty: 0 }, fitS = 1, atFit = true, anim = null;
+
+function clampView() {
+  const r = map.getBoundingClientRect();
+  const w = GEO.W * view.s, h = GEO.H * view.s;
+  const kx = Math.min(120, r.width * 0.3), ky = Math.min(120, r.height * 0.3);
+  view.tx = Math.min(r.width - kx, Math.max(kx - w, view.tx));
+  view.ty = Math.min(r.height - ky, Math.max(ky - h, view.ty));
+}
+function apply() {
+  clampView();
+  world.style.transform = 'translate(' + view.tx + 'px,' + view.ty + 'px) scale(' + view.s + ')';
+  world.style.setProperty('--s', view.s);
+  updateScale();
+}
+function stopAnim() { if (anim) { cancelAnimationFrame(anim); anim = null; } }
+function animateTo(t, ms) {
+  stopAnim();
+  atFit = false;
+  if (reduceMotion || !ms) { view.s = t.s; view.tx = t.tx; view.ty = t.ty; apply(); return; }
+  const f = { s: view.s, tx: view.tx, ty: view.ty }, t0 = performance.now();
+  (function step(now) {
+    const k = Math.min(1, (now - t0) / ms), e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+    // interpolate zoom in log space so it feels even
+    view.s = Math.exp(Math.log(f.s) + (Math.log(t.s) - Math.log(f.s)) * e);
+    view.tx = f.tx + (t.tx - f.tx) * e;
+    view.ty = f.ty + (t.ty - f.ty) * e;
+    apply();
+    anim = k < 1 ? requestAnimationFrame(step) : null;
+  })(t0);
+}
+function fit() {
+  stopAnim();
+  const r = map.getBoundingClientRect();
+  fitS = Math.min(r.width / GEO.W, r.height / GEO.H);
+  view.s = fitS;
+  view.tx = (r.width - GEO.W * fitS) / 2;
+  view.ty = (r.height - GEO.H * fitS) / 2;
+  atFit = true;
+  apply();
+}
+function zoomAt(f, cx, cy) {
+  stopAnim();
+  const ns = Math.min(MAXS, Math.max(fitS, view.s * f));
+  const k = ns / view.s;
+  view.tx = cx - (cx - view.tx) * k;
+  view.ty = cy - (cy - view.ty) * k;
+  view.s = ns;
+  atFit = Math.abs(ns - fitS) < 1e-6;
+  apply();
+}
+function zoomAtClient(f, cx, cy) { const r = map.getBoundingClientRect(); zoomAt(f, cx - r.left, cy - r.top); }
+function fitToPoints(ids, latlons) {
+  const r = map.getBoundingClientRect();
+  const pts = (latlons || ids.map(id => [stopById[id].lat, stopById[id].lon])).map(p => toXY(p[0], p[1]));
+  const xs = pts.map(p => p.x), ys = pts.map(p => p.y);
+  const x0 = Math.min.apply(null, xs), x1 = Math.max.apply(null, xs);
+  const y0 = Math.min.apply(null, ys), y1 = Math.max.apply(null, ys);
+  const pad = 110;
+  const bw = Math.max(x1 - x0, 60), bh = Math.max(y1 - y0, 60);
+  const s = Math.min(MAXS, Math.max(fitS, Math.min((r.width - 2 * pad) / bw, (r.height - 2 * pad) / bh)));
+  animateTo({ s: s, tx: r.width / 2 - ((x0 + x1) / 2) * s, ty: r.height / 2 - ((y0 + y1) / 2) * s }, 800);
+  if (!document.fullscreenElement) map.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'nearest' });
+}
+function flyToStop(id) {
+  const S = stopById[id], r = map.getBoundingClientRect(), p = toXY(S.lat, S.lon);
+  const s = Math.min(MAXS, Math.max(fitS, fitS * 1.0, S.zoom ? S.zoom * 0.7 : 1));
+  animateTo({ s: s, tx: r.width / 2 - p.x * s, ty: r.height / 2 - p.y * s }, 900);
+}
+
+function updateScale() {
+  const kmPerScreenPx = GEO.kmPerPx / view.s;
+  const options = [0.5, 1, 2, 5, 10, 20, 50];
+  let km = options[options.length - 1];
+  for (const o of options) { if (o / kmPerScreenPx >= 60) { km = o; break; } }
+  $('#scalebar').style.width = (km / kmPerScreenPx) + 'px';
+  $('#scalelabel').textContent = km + ' km';
+}
+
+/* ----- layers ----- */
+const layerEls = {};
+LAYERS.forEach(L => {
+  const img = new Image();
+  img.className = 'layer';
+  img.alt = '';
+  img.draggable = false;
+  img.decoding = 'async';
+  img.src = L.file;
+  img.style.opacity = L.opacity;
+  img.style.display = L.on ? 'block' : 'none';
+  img.addEventListener('error', () => {
+    L.missing = true;
+    const m = $('#miss-' + L.id);
+    if (m) m.hidden = false;
+  });
+  world.appendChild(img);
+  layerEls[L.id] = img;
+});
+
+/* ----- route lines (SVG) ----- */
+const SVGNS = 'http://www.w3.org/2000/svg';
+const svg = document.createElementNS(SVGNS, 'svg');
+svg.setAttribute('id', 'routes');
+svg.setAttribute('width', GEO.W);
+svg.setAttribute('height', GEO.H);
+svg.setAttribute('viewBox', '0 0 ' + GEO.W + ' ' + GEO.H);
+svg.setAttribute('aria-hidden', 'true');
+const routeEls = {};
+function polyEl(cls, pts) {
+  const e = document.createElementNS(SVGNS, 'polyline');
+  e.setAttribute('points', pts); e.setAttribute('class', cls); return e;
+}
+const PAIRS = window.SAFE_PAIRS || {};   // safe routes for every pair of places, from safe_routes.js
+const directEls = {};
+const directG = document.createElementNS(SVGNS, 'g');
+directG.setAttribute('id', 'direct-lines');
+function ptsString(latlons) { return latlons.map(p => { const q = toXY(p[0], p[1]); return q.x.toFixed(1) + ',' + q.y.toFixed(1); }).join(' '); }
+ROUTES.forEach(R => {
+  const endpoints = R.points.map(id => [stopById[id].lat, stopById[id].lon]);
+  const pr = PAIRS[R.points.join('|')];
+  R.latlons = pr ? pr.points : null;   // the safe path, if safe_routes.js is present
+  // direct (straight) line: thin grey, for comparison
+  const dl = polyEl('direct-line', ptsString(endpoints));
+  directG.appendChild(dl); directEls[R.id] = dl;
+  // safe route: drawn in the colour of its verdict
+  const pts = ptsString(R.latlons || endpoints);
+  const g = document.createElementNS(SVGNS, 'g');
+  g.setAttribute('id', 'route-' + R.id);
+  const l = polyEl('route-line', pts);
+  l.style.stroke = COLORS[R.safe.verdict || 'pending'];
+  if (R.dash) l.setAttribute('stroke-dasharray', '10 8');
+  g.appendChild(polyEl('route-casing', pts)); g.appendChild(l);
+  svg.appendChild(g);
+  routeEls[R.id] = g;
+});
+svg.insertBefore(directG, svg.firstChild);
+const pathG = document.createElementNS(SVGNS, 'g');
+const pathCase = polyEl('path-casing', ''), pathLine = polyEl('path-line', '');
+pathG.appendChild(pathCase); pathG.appendChild(pathLine);
+svg.appendChild(pathG);
+world.appendChild(svg);
+
+/* ----- pins ----- */
+const pinsBox = document.createElement('div');
+pinsBox.id = 'pins';
+world.appendChild(pinsBox);
+const pinEls = {};
+STOPS.forEach(S => {
+  const p = toXY(S.lat, S.lon);
+  const b = document.createElement('button');
+  b.className = 'pin ' + S.kind;
+  b.style.left = p.x.toFixed(1) + 'px';
+  b.style.top = p.y.toFixed(1) + 'px';
+  b.setAttribute('aria-label', S.name + '. Select for details.');
+  b.dataset.id = S.id;
+  b.innerHTML = '<span class="dot"></span><span class="label ' + S.label + '">' + esc(S.name) + '</span>';
+  b.addEventListener('click', () => {
+    if (pathMode) { pathPts.push({ x: p.x, y: p.y }); drawPath(); renderPath(); return; }  // snap path points to places
+    endTour(); selectStop(S.id, true);
+  });
+  pinsBox.appendChild(b);
+  pinEls[S.id] = b;
+});
+
+/* ----- details panel and guided tour ----- */
+let tourIdx = -1, currentId = null;
+function renderDetails(id) {
+  const S = stopById[id];
+  const st = S.status === 'official'
+    ? '<span class="badge official">Official position</span>'
+    : '<span class="badge approx">Approximate position</span>';
+  let html = '<h3>' + esc(S.name) + '</h3><p>' + st + '</p><p>' + esc(S.why) + '</p>' +
+    '<dl><dt>Coordinates</dt><dd>' + S.lat.toFixed(2) + '° N, ' + S.lon.toFixed(2) + '° E</dd>' +
+    '<dt>From the base</dt><dd>' + (S.km ? 'about ' + S.km + ' km in a straight line' : 'this is the base') + '</dd>' +
+    '<dt>How to reach</dt><dd>' + esc(S.access) + '</dd>' +
+    '<dt>Source</dt><dd>' + esc(S.source) + '</dd></dl>';
+  if (id !== 'base') html += '<div class="tourbar"><button class="btn" id="plan-here">Plan a route from the base to here</button></div>';
+  if (tourIdx >= 0) {
+    html += '<div class="tourbar"><span class="muted small">Guided tour: stop ' + (tourIdx + 1) + ' of ' + TOUR.length + '</span>' +
+      '<button class="btn" id="tour-prev"' + (tourIdx === 0 ? ' disabled' : '') + '>← Back</button>' +
+      '<button class="btn primary" id="tour-next">' + (tourIdx === TOUR.length - 1 ? 'Finish' : 'Next →') + '</button>' +
+      '<button class="btn" id="tour-end">End tour</button></div>';
+  }
+  $('#details').innerHTML = html;
+  const ph = $('#plan-here');
+  if (ph) ph.addEventListener('click', () => { fromSel.value = 'base'; toSel.value = id; renderPlan(true); });
+  if (tourIdx >= 0) {
+    $('#tour-prev').addEventListener('click', () => tourGo(tourIdx - 1));
+    $('#tour-next').addEventListener('click', () => { tourIdx === TOUR.length - 1 ? endTour(true) : tourGo(tourIdx + 1); });
+    $('#tour-end').addEventListener('click', () => endTour(true));
+  }
+}
+function selectStop(id, fly) {
+  currentId = id;
+  Object.keys(pinEls).forEach(k => pinEls[k].classList.toggle('sel', k === id));
+  renderDetails(id);
+  $('#goto').value = id;
+  try { history.replaceState(null, '', '#' + id); } catch (_) {}
+  if (fly) flyToStop(id);
+}
+function tourGo(i) { tourIdx = i; selectStop(TOUR[i], true); }
+function startTour() {
+  setPathMode(false);
+  $('#tour-btn').textContent = '■ Stop tour';
+  $('#tour-btn').setAttribute('aria-pressed', 'true');
+  tourGo(0);
+}
+function endTour(rerender) {
+  if (tourIdx < 0) return;
+  tourIdx = -1;
+  $('#tour-btn').textContent = '▶ Guided tour';
+  $('#tour-btn').setAttribute('aria-pressed', 'false');
+  if (rerender && currentId) renderDetails(currentId);
+}
+$('#tour-btn').addEventListener('click', () => { tourIdx >= 0 ? endTour(true) : startTour(); });
+
+/* ----- spacewalk zone: delta, with the slope layer on and the safe route to it ----- */
+$('#zone-btn').addEventListener('click', () => {
+  endTour(); setPathMode(false);
+  const sl = LAYERS.find(l => l.id === 'slope');
+  if (sl) { sl.on = true; const c = $('#chk-slope'); if (c) c.checked = true; syncLayers(); }
+  const R = ROUTES.find(r => r.id === 'B');
+  Object.keys(routeEls).forEach(k => routeEls[k].classList.toggle('hl', k === R.id));
+  const chk = $('#chk-route-' + R.id); if (chk) { chk.checked = true; routeEls[R.id].style.display = ''; }
+  selectStop('delta', false);
+  fitToPoints(R.points, R.latlons);
+});
+
+const gotoSel = $('#goto');
+STOPS.forEach(S => { const o = document.createElement('option'); o.value = S.id; o.textContent = S.name; gotoSel.appendChild(o); });
+gotoSel.addEventListener('change', () => { if (gotoSel.value) { endTour(); selectStop(gotoSel.value, true); } });
+
+/* ----- controls: layers ----- */
+const layerList = $('#layerlist');
+LAYERS.slice().reverse().forEach(L => {
+  const wrap = document.createElement('div');
+  wrap.innerHTML =
+    '<div class="layer-row"><label><input type="checkbox" id="chk-' + L.id + '"' + (L.on ? ' checked' : '') + '> ' + esc(L.name) + '</label>' +
+    '<input type="range" min="0" max="1" step="0.05" value="' + L.opacity + '" id="op-' + L.id + '" aria-label="Opacity: ' + esc(L.name) + '"></div>' +
+    '<p class="hint">' + esc(L.hint || '') + '</p>' +
+    '<p class="missing" id="miss-' + L.id + '" hidden>Picture not found: ' + esc(L.file) + '. Check the images folder.</p>';
+  layerList.appendChild(wrap);
+  $('#chk-' + L.id, wrap).addEventListener('change', e => { L.on = e.target.checked; syncLayers(); });
+  $('#op-' + L.id, wrap).addEventListener('input', e => { L.opacity = parseFloat(e.target.value); syncLayers(); });
+});
+function syncLayers() {
+  LAYERS.forEach(L => {
+    layerEls[L.id].style.display = L.on ? 'block' : 'none';
+    layerEls[L.id].style.opacity = L.opacity;
+    if (L.legend) { $('#' + L.legend).hidden = !L.on; }
+  });
+}
+$('#chk-labels').addEventListener('change', e => map.classList.toggle('nolabels', !e.target.checked));
+
+/* ----- controls: routes ----- */
+const routeList = $('#routelist');
+ROUTES.forEach(R => {
+  const d = document.createElement('div');
+  d.className = 'legendline';
+  d.innerHTML = '<label style="display:flex;gap:8px;align-items:center;cursor:pointer"><input type="checkbox" id="chk-route-' + R.id + '" checked> ' +
+    '<span class="ln' + (R.dash ? ' dash' : '') + '" style="border-color:' + COLORS[R.safe.verdict || 'pending'] + '"></span> ' + esc(R.name) + '</label>';
+  routeList.appendChild(d);
+  $('#chk-route-' + R.id, d).addEventListener('change', e => { routeEls[R.id].style.display = e.target.checked ? '' : 'none'; });
+});
+{
+  const d = document.createElement('div');
+  d.className = 'legendline';
+  d.style.marginTop = '8px';
+  d.innerHTML = '<label style="display:flex;gap:8px;align-items:center;cursor:pointer"><input type="checkbox" id="chk-direct" checked> ' +
+    '<span class="ln dash" style="border-color:#e6ebf5;border-top-width:2px"></span> Direct straight lines</label>';
+  routeList.appendChild(d);
+  $('#chk-direct', d).addEventListener('change', e => { directG.style.display = e.target.checked ? '' : 'none'; });
+  if (!ROUTES.some(R => R.latlons)) {
+    const n = document.createElement('p');
+    n.className = 'missing'; n.style.marginLeft = '0';
+    n.textContent = 'Safe route lines not found (safe_routes.js). The numbers are shown, and the lines fall back to straight lines.';
+    routeList.appendChild(n);
+  }
+}
+
+/* ----- spacewalk fit planner ----- */
+function renderFit() {
+  const sp = parseFloat($('#speed').value), ev = parseFloat($('#eva').value);
+  $('#v-speed').textContent = sp.toFixed(1) + ' km/h';
+  $('#v-eva').textContent = ev + ' h';
+  const tb = $('#fittable tbody'); tb.innerHTML = '';
+  ROUTES.forEach(R => {
+    const rtKm = 2 * R.safe.km, hrs = rtKm / sp, left = ev - hrs;
+    const res = left >= 2 ? ['easy', 'Fits'] : left > 0 ? ['medium', 'Tight'] : ['hard', 'Rover needed'];
+    const tr = document.createElement('tr');
+    tr.innerHTML = '<td><strong>' + esc(R.name) + '</strong></td><td class="num">' + rtKm.toFixed(1) + ' km</td>' +
+      '<td class="num">' + hrs.toFixed(1) + ' h</td><td class="num">' + (left > 0 ? left.toFixed(1) + ' h' : 'none') + '</td>' +
+      '<td><span class="badge ' + res[0] + '">' + res[1] + '</span></td>';
+    tb.appendChild(tr);
+  });
+}
+$('#speed').addEventListener('input', () => { renderFit(); renderPlan(false); });
+$('#eva').addEventListener('input', () => { renderFit(); renderPlan(false); });
+renderFit();
+
+/* ----- route planner: pick a start and a destination ----- */
+const planG = document.createElementNS(SVGNS, 'g');
+const planCase = polyEl('plan-casing', ''), planLine = polyEl('plan-line', '');
+planG.appendChild(planCase); planG.appendChild(planLine);
+svg.appendChild(planG);
+const planDots = [];
+const fromSel = $('#plan-from'), toSel = $('#plan-to');
+STOPS.forEach(S => {
+  [fromSel, toSel].forEach(sel => { const o = document.createElement('option'); o.value = S.id; o.textContent = S.name; sel.appendChild(o); });
+});
+fromSel.value = 'base'; toSel.value = 'delta';
+function renderPlan(fitMap) {
+  const res = $('#plan-result');
+  planDots.forEach(d => d.remove()); planDots.length = 0;
+  planCase.setAttribute('points', ''); planLine.setAttribute('points', '');
+  world.classList.remove('planning');
+  const a = fromSel.value, b = toSel.value;
+  if (!a || !b || a === b) { res.innerHTML = '<p class="muted">Pick two different places.</p>'; return; }
+  const P = PAIRS[a + '|' + b];
+  if (!P) {
+    res.innerHTML = '<p class="muted">Route data for this pair is not available. Run plan_safe_routes.py and keep safe_routes.js next to this page.</p>';
+    return;
+  }
+  const sp = parseFloat($('#speed').value), ev = parseFloat($('#eva').value);
+  const S = P.safe, D = P.direct;
+  const oneWay = S.km / sp, outBack = 2 * oneWay, left = ev - outBack;
+  let label, cls, why;
+  if (S.steepest >= 20) {
+    label = 'Avoid on foot'; cls = 'hard';
+    why = 'Even the gentlest path crosses ground steeper than 20°, the limit NASA\'s lunar surface suit is required to handle (a Moon reference). Avoid walking this route.';
+  } else if (left <= 0) {
+    label = 'Rover recommended'; cls = 'medium';
+    why = 'Out and back takes about ' + outBack.toFixed(1) + ' h on foot at ' + sp.toFixed(1) + ' km/h, longer than a ' + ev + ' h spacewalk. Use a rover for this trip.';
+  } else if (S.steepest >= 10) {
+    label = 'Walk with caution'; cls = 'medium';
+    why = 'The path includes some harder ground (10° to 20°), so plan extra time. About ' + left.toFixed(1) + ' h would remain on site.';
+  } else if (left < 2) {
+    label = 'Tight on time'; cls = 'medium';
+    why = 'The ground is gentle, but only about ' + left.toFixed(1) + ' h would remain on site, less than the 2 h assumed for sampling.';
+  } else {
+    label = 'Good for walking'; cls = 'easy';
+    why = 'Mostly gentle ground. About ' + left.toFixed(1) + ' h would remain on site for sampling in a ' + ev + ' h spacewalk.';
+  }
+  const dir = D.steepest >= 20
+    ? D.km + ' km, but it crosses ground up to ' + D.steepest + '° (very steep). This route avoids it.'
+    : D.km + ' km, up to ' + D.steepest + '°. The planned route is similar.';
+  res.innerHTML =
+    '<div class="plan-head"><span class="badge ' + cls + '">' + label + '</span><span class="plan-big">' + S.km + ' km</span>' +
+    '<span class="muted">≈ ' + oneWay.toFixed(1) + ' h on foot one way at ' + sp.toFixed(1) + ' km/h</span></div>' +
+    '<p>' + esc(why) + '</p>' +
+    '<dl><dt>Ground</dt><dd><div class="bar" role="img" aria-label="' + S.easy + '% easy, ' + S.medium + '% harder, ' + S.hard + '% very steep">' +
+    '<i style="width:' + S.easy + '%;background:var(--easy)"></i><i style="width:' + S.medium + '%;background:var(--med)"></i><i style="width:' + S.hard + '%;background:var(--hard)"></i></div>' +
+    '<span class="small muted">' + Math.round(S.easy) + '% easy · ' + Math.round(S.medium) + '% harder · ' + Math.round(S.hard) + '% very steep</span></dd>' +
+    '<dt>Steepest slope</dt><dd>' + S.steepest + '° <span class="badge ' + S.verdict + '">' + S.verdict + '</span></dd>' +
+    '<dt>Climb and descent</dt><dd>' + S.climb + ' m up · ' + S.descent + ' m down</dd>' +
+    '<dt>Direct line</dt><dd>' + esc(dir) + '</dd></dl>' +
+    '<p class="small muted" style="margin-top:10px">Out-and-back time assumes the same speed both ways. Boulders are not visible in the 20 m terrain data, so the rating covers steep ground only.</p>';
+  planCase.setAttribute('points', ptsString(P.points));
+  planLine.setAttribute('points', ptsString(P.points));
+  planLine.style.stroke = COLORS[S.verdict];
+  world.classList.add('planning');
+  [[P.points[0], 'A'], [P.points[P.points.length - 1], 'B']].forEach(e => {
+    const q = toXY(e[0][0], e[0][1]);
+    const d = document.createElement('div');
+    d.className = 'endpt'; d.textContent = e[1]; d.style.left = q.x + 'px'; d.style.top = q.y + 'px';
+    pinsBox.appendChild(d); planDots.push(d);
+  });
+  if (fitMap) { endTour(); fitToPoints([], P.points); }
+}
+fromSel.addEventListener('change', () => renderPlan(true));
+toSel.addEventListener('change', () => renderPlan(true));
+$('#plan-swap').addEventListener('click', () => { const t = fromSel.value; fromSel.value = toSel.value; toSel.value = t; renderPlan(true); });
+renderPlan(false);
+
+/* ----- tables ----- */
+const rt = $('#routetable tbody');
+ROUTES.forEach(R => {
+  const tr = document.createElement('tr');
+  const cell = x => '<span class="badge ' + x.verdict + '">' + x.verdict + '</span><br><span class="num">' + x.km + ' km · ' + x.steepest + '° · ' + x.climb + ' m</span>';
+  const drop = (R.direct.steepest - R.safe.steepest).toFixed(1);
+  const extra = (R.safe.km - R.direct.km).toFixed(2);
+  const result = R.direct.steepest - R.safe.steepest > 0.5
+    ? 'Steepest slope cut by <strong>' + drop + '°</strong> for <strong>+' + extra + ' km</strong>'
+    : 'Direct line is already gentle; the safe path adds ' + extra + ' km';
+  tr.innerHTML = '<td><strong>' + esc(R.name) + '</strong></td><td>' + esc(R.how) + '</td>' +
+    '<td>' + cell(R.direct) + '</td><td>' + cell(R.safe) + '</td><td>' + result + '</td>' +
+    '<td><button class="btn" data-route="' + R.id + '">Show on map</button></td>';
+  rt.appendChild(tr);
+});
+rt.addEventListener('click', e => {
+  const b = e.target.closest('button[data-route]'); if (!b) return;
+  const R = ROUTES.find(r => r.id === b.dataset.route);
+  Object.keys(routeEls).forEach(k => routeEls[k].classList.toggle('hl', k === R.id));
+  const chk = $('#chk-route-' + R.id); chk.checked = true; routeEls[R.id].style.display = '';
+  endTour();
+  fromSel.value = R.points[0]; toSel.value = R.points[1];
+  renderPlan(false);
+  fitToPoints(R.points, R.latlons);
+});
+const st =$('#stoptable tbody');
+STOPS.forEach(S => {
+  const kind = { base: 'Base', science: 'Science stop', context: 'Valley (context)', centre: 'Crater centre' }[S.kind];
+  const tr = document.createElement('tr');
+  tr.innerHTML = '<td><strong>' + esc(S.name) + '</strong></td><td>' + kind + '</td><td class="num">' + S.lat.toFixed(2) + '° N</td><td class="num">' + S.lon.toFixed(2) + '° E</td>' +
+    '<td><span class="badge ' + S.status + '">' + (S.status === 'official' ? 'Official' : 'Approximate') + '</span></td>' +
+    '<td class="num">' + (S.km ? '≈ ' + S.km + ' km' : '0') + '</td><td>' + esc(S.access) + '</td>';
+  st.appendChild(tr);
+});
+
+/* ----- conditions, imagery, about ----- */
+const cg = $('#condgrid');
+CONDITIONS.forEach(c => {
+  const d = document.createElement('div');
+  d.className = 'card cond';
+  d.innerHTML = '<h3><span class="ico" aria-hidden="true">' + c.icon + '</span>' + esc(c.title) + '</h3>' +
+    c.items.map(i => '<div class="metric"><b>' + esc(i.v) + '</b><span>' + esc(i.l) + '</span></div>').join('') +
+    '<div class="plan"><strong>Planning note.</strong> ' + esc(c.plan) + '</div>' +
+    '<div class="src">Source: <a href="' + esc(c.src.u) + '" target="_blank" rel="noopener">' + esc(c.src.t) + '</a></div>';
+  cg.appendChild(d);
+});
+if (SURFACE_VIEWS.length) {
+  $('#imagery').hidden = false; $('#nav-imagery').hidden = false;
+  SURFACE_VIEWS.forEach(v => {
+    const d = document.createElement('figure');
+    d.className = 'fig';
+    d.innerHTML = '<img src="' + esc(v.file) + '" alt="' + esc(v.title) + '" loading="lazy">' +
+      '<figcaption>' + esc(v.title) + '. Credit: ' + (v.url ? '<a href="' + esc(v.url) + '" target="_blank" rel="noopener">' + esc(v.credit) + '</a>' : esc(v.credit)) + '</figcaption>';
+    $('#viewlist').appendChild(d);
+  });
+}
+ABOUT.forEach(t => { const p = document.createElement('p'); p.textContent = t; $('#about-text').appendChild(p); });
+
+/* ----- path checker ----- */
+let pathMode = false, pathPts = [];
+const pathcard = $('#pathcard');
+const pathDots = [];
+function setPathMode(on) {
+  pathMode = on;
+  map.classList.toggle('pathmode', on);
+  $('#path-btn').setAttribute('aria-pressed', on ? 'true' : 'false');
+  $('#maphint').hidden = !on;
+  pathcard.hidden = !on;
+  if (on) { endTour(true); pathPts = []; drawPath(); renderPath(); }
+  else { pathPts = []; drawPath(); }
+}
+function drawPath() {
+  const pts = pathPts.map(p => p.x.toFixed(1) + ',' + p.y.toFixed(1)).join(' ');
+  pathCase.setAttribute('points', pts); pathLine.setAttribute('points', pts);
+  pathDots.forEach(d => d.remove()); pathDots.length = 0;
+  pathPts.forEach(p => {
+    const d = document.createElement('div');
+    d.className = 'pathpt'; d.style.left = p.x + 'px'; d.style.top = p.y + 'px';
+    pinsBox.appendChild(d); pathDots.push(d);
+  });
+}
+function classAt(x, y) {
+  // returns 0 none, 1 easy, 2 medium, 3 hard; or undefined if the picture can't be read
+  const img = layerEls.slope;
+  if (!img || !img.complete || !img.naturalWidth) return undefined;
+  if (!classAt.ctx) { const c = document.createElement('canvas'); c.width = c.height = 1; classAt.ctx = c.getContext('2d', { willReadFrequently: true }); }
+  const sx = Math.max(0, Math.min(img.naturalWidth - 1, Math.round(x * img.naturalWidth / GEO.W)));
+  const sy = Math.max(0, Math.min(img.naturalHeight - 1, Math.round(y * img.naturalHeight / GEO.H)));
+  classAt.ctx.clearRect(0, 0, 1, 1);
+  classAt.ctx.drawImage(img, sx, sy, 1, 1, 0, 0, 1, 1);
+  const d = classAt.ctx.getImageData(0, 0, 1, 1).data;  // throws if the page is opened from a file
+  if (d[3] < 20) return 0;
+  if (d[0] > 190 && d[1] < 110) return 3;
+  if (d[0] > 190 && d[1] >= 150) return 2;
+  return 1;
+}
+function analysePath() {
+  const counts = [0, 0, 0, 0];
+  for (let i = 0; i < pathPts.length - 1; i++) {
+    const a = pathPts[i], b = pathPts[i + 1];
+    const n = Math.min(3000, Math.max(2, Math.ceil(Math.hypot(b.x - a.x, b.y - a.y))));
+    for (let k = 0; k <= n; k++) {
+      const c = classAt(a.x + (b.x - a.x) * k / n, a.y + (b.y - a.y) * k / n);
+      if (c === undefined) return null;
+      counts[c]++;
+    }
+  }
+  return counts;
+}
+function renderPath() {
+  if (pathPts.length < 2) {
+    pathcard.innerHTML = '<h3>Check a path</h3><p class="muted">Click two or more points on the map. Astronav measures the distance and checks the slope along the line.</p>' +
+      '<div class="tourbar"><button class="btn" id="path-done">Done</button></div>';
+    $('#path-done').addEventListener('click', () => setPathMode(false));
+    return;
+  }
+  let km = 0;
+  for (let i = 0; i < pathPts.length - 1; i++) km += kmBetween(toLatLon(pathPts[i].x, pathPts[i].y), toLatLon(pathPts[i + 1].x, pathPts[i + 1].y));
+  let slopeHtml;
+  let counts = null, blocked = false;
+  try { counts = analysePath(); } catch (e) { blocked = true; }
+  if (counts) {
+    const tot = counts[1] + counts[2] + counts[3] || 1;
+    const pe = counts[1] / tot * 100, pm = counts[2] / tot * 100, ph = counts[3] / tot * 100;
+    const v = counts[3] ? 'hard' : counts[2] ? 'medium' : 'easy';
+    const label = { easy: 'Mostly easy ground', medium: 'Includes harder ground', hard: 'Crosses very steep ground' }[v];
+    slopeHtml = '<dt>Walkability</dt><dd><span class="badge ' + v + '">' + label + '</span></dd>' +
+      '<dt>Along the path</dt><dd><div class="bar" role="img" aria-label="Share of path: ' + pe.toFixed(0) + '% easy, ' + pm.toFixed(0) + '% harder, ' + ph.toFixed(0) + '% very steep">' +
+      '<i style="width:' + pe + '%;background:var(--easy)"></i><i style="width:' + pm + '%;background:var(--med)"></i><i style="width:' + ph + '%;background:var(--hard)"></i></div>' +
+      '<span class="small muted">' + pe.toFixed(0) + '% easy · ' + pm.toFixed(0) + '% harder · ' + ph.toFixed(0) + '% very steep</span></dd>';
+  } else {
+    slopeHtml = '<dt>Walkability</dt><dd class="muted">' + (blocked
+      ? 'The slope check works on the published site. A page opened from a local file cannot read the slope picture.'
+      : 'The slope picture is not available.') + '</dd>';
+  }
+  pathcard.innerHTML = '<h3>Your path</h3><dl><dt>Points</dt><dd>' + pathPts.length + '</dd><dt>Distance</dt><dd><strong>' + km.toFixed(2) + ' km</strong> along straight lines</dd>' + slopeHtml + '</dl>' +
+    '<p class="small muted">Checked every ~40 m against the slope layer. Boulders are not visible at this resolution.</p>' +
+    '<div class="tourbar"><button class="btn" id="path-undo">Undo last point</button><button class="btn" id="path-clear">Clear</button><button class="btn" id="path-done">Done</button></div>';
+  $('#path-undo').addEventListener('click', () => { pathPts.pop(); drawPath(); renderPath(); });
+  $('#path-clear').addEventListener('click', () => { pathPts = []; drawPath(); renderPath(); });
+  $('#path-done').addEventListener('click', () => setPathMode(false));
+}
+$('#path-btn').addEventListener('click', () => setPathMode(!pathMode));
+
+/* ----- pan and zoom ----- */
+const pts = new Map();
+let lastPinch = null, downPos = null, moved = 0;
+function pinchState() {
+  const a = Array.from(pts.values());
+  return { mx: (a[0].x + a[1].x) / 2, my: (a[0].y + a[1].y) / 2, d: Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y) || 1 };
+}
+map.addEventListener('pointerdown', e => {
+  if (e.target.closest('.pin') || e.target.closest('.mapui button')) return;
+  stopAnim();
+  try { map.setPointerCapture(e.pointerId); } catch (_) {}
+  pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (pts.size === 1) { downPos = { x: e.clientX, y: e.clientY }; moved = 0; }
+  map.classList.add('drag');
+  if (pts.size === 2) { lastPinch = pinchState(); moved = 99; }
+});
+map.addEventListener('pointermove', e => {
+  updateCoords(e);
+  if (!pts.has(e.pointerId)) return;
+  const prev = pts.get(e.pointerId), cur = { x: e.clientX, y: e.clientY };
+  pts.set(e.pointerId, cur);
+  if (downPos) moved = Math.max(moved, Math.hypot(cur.x - downPos.x, cur.y - downPos.y));
+  if (pts.size === 1) {
+    if (pathMode && moved < 5) return;
+    view.tx += cur.x - prev.x; view.ty += cur.y - prev.y; atFit = false; apply();
+  } else if (pts.size === 2 && lastPinch) {
+    const now = pinchState();
+    zoomAtClient(now.d / lastPinch.d, now.mx, now.my);
+    view.tx += now.mx - lastPinch.mx; view.ty += now.my - lastPinch.my; apply();
+    lastPinch = now;
+  }
+});
+function endPointer(e, up) {
+  const wasOne = pts.size === 1;
+  pts.delete(e.pointerId);
+  if (pts.size < 2) lastPinch = null;
+  if (pts.size === 0) map.classList.remove('drag');
+  if (up && wasOne && pathMode && moved < 5) {
+    const r = map.getBoundingClientRect();
+    const x = (e.clientX - r.left - view.tx) / view.s, y = (e.clientY - r.top - view.ty) / view.s;
+    if (x >= 0 && y >= 0 && x <= GEO.W && y <= GEO.H) { pathPts.push({ x: x, y: y }); drawPath(); renderPath(); }
+  }
+}
+map.addEventListener('pointerup', e => endPointer(e, true));
+map.addEventListener('pointercancel', e => endPointer(e, false));
+map.addEventListener('wheel', e => {
+  e.preventDefault();
+  zoomAtClient(Math.exp(-e.deltaY * (e.ctrlKey ? 0.01 : 0.0016)), e.clientX, e.clientY);
+}, { passive: false });
+map.addEventListener('keydown', e => {
+  stopAnim();
+  const step = 60;
+  if (e.key === 'ArrowLeft') view.tx += step;
+  else if (e.key === 'ArrowRight') view.tx -= step;
+  else if (e.key === 'ArrowUp') view.ty += step;
+  else if (e.key === 'ArrowDown') view.ty -= step;
+  else if (e.key === '+' || e.key === '=') { const r = map.getBoundingClientRect(); zoomAt(1.3, r.width / 2, r.height / 2); return; }
+  else if (e.key === '-') { const r = map.getBoundingClientRect(); zoomAt(1 / 1.3, r.width / 2, r.height / 2); return; }
+  else return;
+  e.preventDefault(); atFit = false; apply();
+});
+$('#zin').addEventListener('click', () => { const r = map.getBoundingClientRect(); zoomAt(1.5, r.width / 2, r.height / 2); });
+$('#zout').addEventListener('click', () => { const r = map.getBoundingClientRect(); zoomAt(1 / 1.5, r.width / 2, r.height / 2); });
+$('#zreset').addEventListener('click', () => { Object.keys(routeEls).forEach(k => routeEls[k].classList.remove('hl')); fit(); });
+
+function updateCoords(e) {
+  const r = map.getBoundingClientRect();
+  const x = (e.clientX - r.left - view.tx) / view.s, y = (e.clientY - r.top - view.ty) / view.s;
+  const el = $('#coords');
+  if (x < 0 || y < 0 || x > GEO.W || y > GEO.H) { el.textContent = 'Outside the mapped area'; return; }
+  const p = toLatLon(x, y);
+  el.textContent = p.lat.toFixed(3) + '° N, ' + p.lon.toFixed(3) + '° E';
+}
+
+/* ----- share and full screen ----- */
+$('#share-btn').addEventListener('click', () => {
+  const b = $('#share-btn'), url = location.href;
+  const done = t => { b.textContent = t; setTimeout(() => { b.textContent = 'Copy link'; }, 1800); };
+  try { navigator.clipboard.writeText(url).then(() => done('Link copied'), () => done('Press Ctrl+C to copy')); }
+  catch (_) { done('Copy from the address bar'); }
+});
+$('#fs-btn').addEventListener('click', () => {
+  try { document.fullscreenElement ? document.exitFullscreen() : map.requestFullscreen(); } catch (_) {}
+});
+document.addEventListener('fullscreenchange', () => { setTimeout(() => { atFit ? fit() : apply(); }, 50); });
+
+window.addEventListener('resize', () => {
+  const r = map.getBoundingClientRect();
+  fitS = Math.min(r.width / GEO.W, r.height / GEO.H);
+  if (atFit || view.s < fitS) fit(); else apply();
+});
+
+syncLayers();
+fit();
+const h = location.hash.replace('#', '');
+if (stopById[h]) selectStop(h, true);
+
+window.astronav = { view: () => view, toXY, toLatLon, selectStop, fitToPoints, classAt };
+})();
+</script>
+</body>
+</html>
