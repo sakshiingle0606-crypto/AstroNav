@@ -44,11 +44,14 @@
 
   /* ---------- Hero ---------- */
   .hero{background:#000;border-bottom:1px solid var(--line);text-align:center}
-  .hero img{display:block;margin:0 auto;max-width:100%;height:auto;max-height:340px;width:auto}
-  .intro{padding-top:44px}
-  .intro h1{font-size:clamp(2rem,4.6vw,3.2rem);letter-spacing:-.02em;margin-bottom:.8rem}
-  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:28px}
-  .stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px}
+  .hero img{display:block;width:100%;height:340px;object-fit:cover;object-position:center}
+  .intro{position:relative;isolation:isolate;margin:0 0 56px;padding:clamp(48px,7vw,92px) max(20px,calc((100vw - 1280px)/2 + 20px)) 28px;background:linear-gradient(90deg,rgba(6,9,15,.94) 0%,rgba(6,9,15,.82) 42%,rgba(6,9,15,.24) 100%),url("images/jezero-hero.png") center 48%/cover no-repeat;border-bottom:1px solid var(--line)}
+  .intro-layout{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(320px,.85fr);gap:clamp(28px,5vw,72px);align-items:center;max-width:1280px;margin:0 auto}
+  .intro-copy{max-width:690px}
+  .intro h1{max-width:13ch;font-size:clamp(2.4rem,5vw,4.3rem);letter-spacing:-.035em;margin-bottom:1rem;text-shadow:0 2px 24px rgba(0,0,0,.4)}
+  .intro .lead{max-width:64ch;color:#e3e8f2;text-shadow:0 1px 12px rgba(0,0,0,.65)}
+  .stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .stat{background:rgba(12,17,27,.82);border:1px solid rgba(220,230,250,.24);border-radius:var(--radius);padding:16px 18px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 10px 24px rgba(0,0,0,.22)}
   .stat b{display:block;font-size:1.7rem;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
   .stat span{color:var(--muted);font-size:.88rem}
 
@@ -109,6 +112,12 @@
   .mbtn{font:inherit;color:var(--text);background:rgba(18,23,35,.92);border:1px solid var(--line2);border-radius:9px;min-width:38px;min-height:38px;padding:0 10px;cursor:pointer;font-size:1.05rem}
   .mbtn:hover{border-color:#8fa3d6}
   .mbtn:focus-visible{outline:2px solid #fff}
+  .map-legend-buttons{left:10px;top:148px;display:flex;flex-direction:column;gap:6px}
+  .map-legend-toggle{display:grid;place-items:center;padding:0}
+  .map-legend-toggle svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .map-legend-toggle[aria-expanded=true]{background:#2a3350;border-color:#8fa3d6}
+  .map-legend-panel{left:58px;top:148px;width:min(300px,calc(100% - 70px));max-height:calc(100% - 160px);overflow:auto;padding:14px;background:rgba(18,23,35,.97);box-shadow:0 6px 24px rgba(0,0,0,.45);pointer-events:auto}
+  .map-legend-panel h3{margin:0 0 8px}
   .north{right:12px;top:10px;text-align:center;font-weight:700;font-size:13px;color:#fff;background:rgba(9,12,18,.82);border-radius:9px;padding:4px 10px;line-height:1.1}
   .north span{display:block;font-size:18px}
   .scalebox{left:12px;bottom:10px;color:#fff;font-size:12px;background:rgba(9,12,18,.82);padding:5px 9px;border-radius:9px}
@@ -146,6 +155,39 @@
   .missing{color:#ffb4a8;font-size:.84rem;margin:0 0 6px 26px}
   .grad{height:14px;border-radius:7px;border:1px solid var(--line);background:linear-gradient(to right,rgb(40,70,160),rgb(60,160,100),rgb(230,220,120),rgb(150,100,60),rgb(250,250,250))}
   .ticks{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-top:3px;font-variant-numeric:tabular-nums}
+  .legend-more{margin-top:8px;font-size:.86rem}
+  .legend-more summary{width:max-content;color:var(--link);cursor:pointer}
+  .legend-more p{margin:6px 0 0}
+  .section-more{margin-top:10px;font-size:.9rem}
+  .section-more summary{width:max-content;color:var(--link);cursor:pointer;font-weight:600}
+  .section-more ul{margin-top:8px}
+  .method-more{margin-top:14px}
+  .source-intro{max-width:68ch;color:var(--muted)}
+  .source-disclosure{margin-top:16px}
+  .source-disclosure>summary{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 18px;border:1px solid var(--line2);border-radius:12px;background:linear-gradient(110deg,#182036,#121723 70%);color:var(--text);font-weight:700;cursor:pointer;list-style:none}
+  .source-disclosure>summary::-webkit-details-marker{display:none}
+  .source-disclosure>summary:after{content:"+";display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--accent);color:#1a0c05;font-size:1.3rem;line-height:1;flex:none}
+  .source-disclosure[open]>summary:after{content:"−"}
+  .source-disclosure>summary:focus-visible{outline:2px solid #fff;outline-offset:3px}
+  .source-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:14px}
+  .source-card{position:relative;overflow:hidden;padding:18px;border:1px solid var(--line);border-radius:var(--radius);background:linear-gradient(145deg,#151c2a,var(--panel2) 75%);box-shadow:0 10px 24px rgba(0,0,0,.18)}
+  .source-card:before{content:"";position:absolute;inset:0 auto 0 0;width:3px;background:var(--accent)}
+  .source-card:nth-child(2):before{background:#8fd3ff}
+  .source-card:nth-child(3):before{background:#a5e8b8}
+  .source-type{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent2);font-weight:700}
+  .source-card h3{margin:8px 0}
+  .source-card p{font-size:.9rem;color:var(--muted)}
+  .source-card a{display:inline-block;margin-top:8px;font-size:.9rem;font-weight:600;text-decoration:none}
+  .source-card a:hover{text-decoration:underline}
+  .about-card{position:relative;overflow:hidden;margin-top:56px;padding:clamp(22px,4vw,40px);border:1px solid var(--line2);border-radius:20px;background:radial-gradient(ellipse at 92% 18%,rgba(255,122,69,.16),transparent 34%),linear-gradient(135deg,#151c2a,#0e131d 72%);box-shadow:0 18px 48px rgba(0,0,0,.24)}
+  .about-head{display:flex;align-items:center;justify-content:space-between;gap:20px}
+  .about-head .eyebrow{margin-bottom:8px}
+  #about h2{font-size:clamp(1.7rem,3vw,2.4rem);letter-spacing:-.025em}
+  #about-text{max-width:76ch;margin-top:14px}
+  #about-text p{font-size:clamp(1rem,1.3vw,1.12rem);line-height:1.75;color:#c4cce0}
+  .about-orb{position:relative;display:grid;place-items:center;width:68px;height:68px;flex:none;border-radius:50%;background:radial-gradient(circle at 34% 30%,#ffd09b 0,#ff985b 22%,#bd492c 58%,#68271f 100%);box-shadow:inset -10px -8px 18px rgba(0,0,0,.35),0 0 34px rgba(255,122,69,.24)}
+  .about-orb:before{content:"";position:absolute;inset:-9px -16px;border:1px solid rgba(255,176,103,.45);border-radius:50%;transform:rotate(-18deg)}
+  .about-orb:after{content:"";position:absolute;top:3px;right:4px;width:7px;height:7px;border-radius:50%;background:#fff;box-shadow:-43px 22px 0 -2px #fff,-25px -8px 0 -3px #fff,13px 45px 0 -2px #8fd3ff}
   .sw{display:flex;align-items:center;gap:8px;margin:4px 0;font-size:.92rem}
   .sw i{display:inline-block;width:22px;height:14px;border-radius:3px;border:1px solid rgba(255,255,255,.3)}
   .legendline{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:.9rem}
@@ -204,8 +246,14 @@
     .controls{order:2}
     .map{height:64vh;min-height:380px}
     .grid2,.grid3,.plan-grid{grid-template-columns:1fr}
+    .intro{padding-top:52px;padding-bottom:24px;background-position:center,58% center}
+    .intro-layout{grid-template-columns:1fr;gap:28px}
+    .intro-copy{max-width:760px}
+    .intro h1{max-width:15ch}
+    .stats{max-width:700px}
     .stats{grid-template-columns:repeat(2,1fr)}
-    .hero img{max-height:210px}
+    .hero img{height:210px}
+    .source-grid{grid-template-columns:1fr}
     section{margin:42px 0}
   }
 </style>
@@ -231,21 +279,24 @@
   <img src="images/banner.png" alt="Astronav: Guiding humanity's first step on Mars. Mars seen from space with stars above it.">
 </header>
 
+<header class="intro" id="overview">
+    <div class="intro-layout">
+      <div class="intro-copy">
+        <div class="eyebrow">Jezero Crater, Mars</div>
+        <h1>Plan the first Marswalk with the terrain in view</h1>
+        <p class="lead">Jezero is an ancient lake basin and the landing site of NASA's Perseverance rover. Astronav brings elevation, slope and walkability into one interactive map, with the science stops, example routes and measured conditions an astronaut would weigh before stepping outside.</p>
+      </div>
+      <div class="stats" aria-label="Key figures">
+        <div class="stat"><b>47.5 km</b><span>Crater diameter</span></div>
+        <div class="stat"><b>3,029 m</b><span>Elevation range in the mapped area</span></div>
+        <div class="stat"><b>20 m</b><span>Terrain data resolution</span></div>
+        <div class="stat"><b>3</b><span>Routes with a slope-checked safe path</span></div>
+      </div>
+    </div>
+  </header>
+
 <main class="wrap">
   <noscript><p class="card">This page needs JavaScript to show the interactive map.</p></noscript>
-
-  <section class="intro" id="overview">
-    <div class="eyebrow">Jezero Crater, Mars</div>
-    <h1>Plan the first Marswalk with the terrain in view</h1>
-    <p class="lead">Jezero is an ancient lake basin and the landing site of NASA's Perseverance rover. Astronav brings elevation, slope and walkability into one interactive map, with the science stops, example routes and measured conditions an astronaut would weigh before stepping outside.</p>
-    <div class="stats" aria-label="Key figures">
-      <div class="stat"><b>47.5 km</b><span>Crater diameter</span></div>
-      <div class="stat"><b>3,029 m</b><span>Elevation range in the mapped area</span></div>
-      <div class="stat"><b>20 m</b><span>Terrain data resolution</span></div>
-      <div class="stat"><b>3</b><span>Routes with a slope-checked safe path</span></div>
-    </div>
-  </section>
-
   <section id="map-section" aria-label="Interactive map of Jezero Crater">
     <div class="eyebrow">Explore</div>
     <h2>Interactive terrain map</h2>
@@ -289,7 +340,10 @@
           <h3>Elevation</h3>
           <div class="grad" role="img" aria-label="Colour bar from blue (lowest) to white (highest)"></div>
           <div class="ticks"><span>−3243 m</span><span>−2719</span><span>−2195</span><span>−1671</span><span>−1147 m</span></div>
-          <p class="small muted" style="margin-top:8px">Blue is this height or lower, white is this height or higher. Heights are relative to the reference level in the USGS data. Mars has no sea level.</p>
+          <details class="legend-more">
+            <summary>Know more</summary>
+            <p class="small muted">Blue is this height or lower, white is this height or higher. Heights are relative to the reference level in the USGS data. Mars has no sea level.</p>
+          </details>
         </div>
 
         <div class="card" id="legend-slope">
@@ -300,19 +354,6 @@
           <p class="small muted" style="margin-top:8px">The 20° limit matches the slope NASA's lunar surface suit is required to handle (Moon). The 10° "easy" limit is a planning assumption.</p>
         </div>
 
-        <div class="card">
-          <h3>Routes</h3>
-          <div id="routelist"></div>
-          <div class="legendline" style="margin-top:8px"><span class="ln dash" style="border-color:#ddd"></span> Dashed: rover-assisted trip</div>
-        </div>
-
-        <div class="card">
-          <h3>Key</h3>
-          <div class="legendline"><span class="keyicon" style="background:#ffd34d;clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);border-radius:0"></span> Base (landing site)</div>
-          <div class="legendline"><span class="keyicon" style="background:var(--accent)"></span> Science stop</div>
-          <div class="legendline"><span class="keyicon" style="border:3px solid #8fd3ff"></span> Valley (context)</div>
-          <div class="legendline"><span class="keyicon" style="border:2px dashed #fff"></span> Crater centre</div>
-        </div>
       </aside>
 
       <div class="mapcol">
@@ -322,6 +363,26 @@
             <button class="mbtn" id="zin" aria-label="Zoom in">+</button>
             <button class="mbtn" id="zout" aria-label="Zoom out">−</button>
             <button class="mbtn" id="zreset" aria-label="Reset view" title="Reset view">⌂</button>
+          </div>
+          <div class="mapui map-legend-buttons" role="group" aria-label="Map information">
+            <button class="mbtn map-legend-toggle" id="map-routes-btn" aria-label="Show routes" aria-expanded="false" aria-controls="map-routes-panel" title="Routes">
+              <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="6" cy="18" r="2"/><circle cx="18" cy="6" r="2"/><path d="M8 18h3a3 3 0 0 0 3-3V9a3 3 0 0 1 3-3"/></svg>
+            </button>
+            <button class="mbtn map-legend-toggle" id="map-key-btn" aria-label="Show map key" aria-expanded="false" aria-controls="map-key-panel" title="Key">
+              <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="5" cy="6" r="1.5"/><path d="M10 6h9M5 12h14M5 18h14"/></svg>
+            </button>
+          </div>
+          <div class="mapui card map-legend-panel" id="map-routes-panel" role="region" aria-labelledby="map-routes-heading" hidden>
+            <h3 id="map-routes-heading">Routes</h3>
+            <div id="routelist"></div>
+            <div class="legendline" style="margin-top:8px"><span class="ln dash" style="border-color:#ddd"></span> Dashed: rover-assisted trip</div>
+          </div>
+          <div class="mapui card map-legend-panel" id="map-key-panel" role="region" aria-labelledby="map-key-heading" hidden>
+            <h3 id="map-key-heading">Key</h3>
+            <div class="legendline"><span class="keyicon" style="background:#ffd34d;clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);border-radius:0"></span> Base (landing site)</div>
+            <div class="legendline"><span class="keyicon" style="background:var(--accent)"></span> Science stop</div>
+            <div class="legendline"><span class="keyicon" style="border:3px solid #8fd3ff"></span> Valley (context)</div>
+            <div class="legendline"><span class="keyicon" style="border:2px dashed #fff"></span> Crater centre</div>
           </div>
           <div class="mapui north" aria-hidden="true"><span>↑</span>N</div>
           <div class="mapui scalebox" aria-hidden="true"><div class="scalebar" id="scalebar"></div><span id="scalelabel">10 km</span></div>
@@ -350,13 +411,16 @@
           <tbody></tbody>
         </table>
       </div>
-      <ul class="clean small muted">
-        <li><strong>Verdict</strong> uses the limits above: easy under 10°, medium 10° to 20°, hard over 20°.</li>
-        <li><strong>Total climbing</strong> adds up every uphill step along the line, so small bumps in the data count too.</li>
-        <li>Safe paths are found by searching 40 m cells, avoiding cells steeper than 20° and favouring flatter ground. All three safe paths stay below 20°.</li>
-        <li>The terrain data cannot show boulders or rock formations, so the safe path avoids steep ground only. Rock hazards need higher-resolution imagery.</li>
-        <li>The distance a suited astronaut can walk is not modelled here, so long trips are shown as rover-assisted.</li>
-      </ul>
+      <details class="section-more">
+        <summary>Worth knowing</summary>
+        <ul class="clean small muted">
+          <li><strong>Verdict</strong> uses the limits above: easy under 10°, medium 10° to 20°, hard over 20°.</li>
+          <li><strong>Total climbing</strong> adds up every uphill step along the line, so small bumps in the data count too.</li>
+          <li>Safe paths are found by searching 40 m cells, avoiding cells steeper than 20° and favouring flatter ground. All three safe paths stay below 20°.</li>
+          <li>The terrain data cannot show boulders or rock formations, so the safe path avoids steep ground only. Rock hazards need higher-resolution imagery.</li>
+          <li>The distance a suited astronaut can walk is not modelled here, so long trips are shown as rover-assisted.</li>
+        </ul>
+      </details>
     </div>
 
     <div class="card" id="planner" style="margin-top:16px">
@@ -372,10 +436,13 @@
           <tbody></tbody>
         </table>
       </div>
-      <ul class="clean small muted">
-        <li><strong>Reference values.</strong> Mars surface gravity is 0.376 g, about 3.71 m/s² (<a href="https://www.universetoday.com/articles/gravity-on-mars" target="_blank" rel="noopener">Universe Today</a>). NASA's lunar surface suit requirements, which are for the Moon and not Mars, call for walking up, down and across slopes of up to 20°, spacewalks of up to 8 hours (6 ± 2 hours), and traverses of up to 2 km from the lander at about 2 km/h on level ground (<a href="https://ntrs.nasa.gov/api/citations/20210000827/downloads/Exporation%20EVA%20Testing%20and%20Analogs%2020210000827.pdf" target="_blank" rel="noopener">NASA NTRS</a>).</li>
-        <li><strong>Assumptions.</strong> A result of "Fits" needs at least 2 hours left on site for sampling. Walking time ignores slowdown from slope, suit and equipment load, and Mars has no approved suit standard yet, so the lunar values are a reference only.</li>
-      </ul>
+      <details class="section-more">
+        <summary>Worth Knowing</summary>
+        <ul class="clean small muted">
+          <li><strong>Reference values.</strong> Mars surface gravity is 0.376 g, about 3.71 m/s² (<a href="https://www.universetoday.com/articles/gravity-on-mars" target="_blank" rel="noopener">Universe Today</a>). NASA's lunar surface suit requirements, which are for the Moon and not Mars, call for walking up, down and across slopes of up to 20°, spacewalks of up to 8 hours (6 ± 2 hours), and traverses of up to 2 km from the lander at about 2 km/h on level ground (<a href="https://ntrs.nasa.gov/api/citations/20210000827/downloads/Exporation%20EVA%20Testing%20and%20Analogs%2020210000827.pdf" target="_blank" rel="noopener">NASA NTRS</a>).</li>
+          <li><strong>Assumptions.</strong> A result of "Fits" needs at least 2 hours left on site for sampling. Walking time ignores slowdown from slope, suit and equipment load, and Mars has no approved suit standard yet, so the lunar values are a reference only.</li>
+        </ul>
+      </details>
     </div>
 
     <h2 style="margin-top:40px">Places on the map</h2>
@@ -386,7 +453,10 @@
           <tbody></tbody>
         </table>
       </div>
-      <p class="small muted">Distances from the base are straight-line values calculated from the coordinates. "Official" positions use published gazetteer coordinates. "Approximate" positions were estimated from imagery.</p>
+      <details class="section-more">
+        <summary>Do you know?</summary>
+        <p class="small muted">Distances from the base are straight-line values calculated from the coordinates. "Official" positions use published gazetteer coordinates. "Approximate" positions were estimated from imagery.</p>
+      </details>
     </div>
   </section>
 
@@ -407,42 +477,71 @@
   <section id="method">
     <div class="eyebrow">Method</div>
     <h2>How the map is made, and its limits</h2>
-    <div class="grid2" style="margin-top:14px">
-      <div class="card">
-        <h3>Method</h3>
-        <ul class="clean">
-          <li>Elevation comes from a 20 m terrain model of Jezero built from Mars Reconnaissance Orbiter CTX images.</li>
-          <li>Slope is the steepness between neighbouring 20 m cells. Relief shading is lit from the north-west to make the shape of the land readable.</li>
-          <li>Each cell is coloured easy, harder or very steep using the 10° and 20° limits.</li>
-          <li>Route and path distances use the Mars radius (3,396 km), about 59.3 km per degree of latitude.</li>
-        </ul>
-      </div>
-      <div class="card">
-        <h3>Limits</h3>
-        <ul class="clean">
-          <li>With 20 m cells, boulders and small cliffs cannot be seen. Slope stands in for hazards and does not guarantee safety.</li>
-          <li>The 10° "easy" limit and the choice of example routes are planning assumptions. The 20° limit follows NASA's lunar suit requirement, which is for the Moon and not Mars.</li>
-          <li>Places marked "Approximate" are estimated from imagery. Only "Official" places use published coordinates.</li>
-          <li>This is a planning aid for study and demonstration, not a flight tool.</li>
-        </ul>
-      </div>
+    <div class="card method-more">
+      <h3>How did we map a place no humans have ever walked?</h3>
+      <details class="section-more">
+        <summary>Spoiler</summary>
+        <div class="card" style="margin-top:12px">
+          <h3>Method</h3>
+          <ul class="clean">
+            <li>Elevation comes from a 20 m terrain model of Jezero built from Mars Reconnaissance Orbiter CTX images.</li>
+            <li>Slope is the steepness between neighbouring 20 m cells. Relief shading is lit from the north-west to make the shape of the land readable.</li>
+            <li>Each cell is coloured easy, harder or very steep using the 10° and 20° limits.</li>
+            <li>Route and path distances use the Mars radius (3,396 km), about 59.3 km per degree of latitude.</li>
+          </ul>
+        </div>
+      </details>
+      <details class="section-more">
+        <summary>Know our limits!!</summary>
+        <div class="card" style="margin-top:12px">
+          <h3>Limits</h3>
+          <ul class="clean">
+            <li>With 20 m cells, boulders and small cliffs cannot be seen. Slope stands in for hazards and does not guarantee safety.</li>
+            <li>The 10° "easy" limit and the choice of example routes are planning assumptions. The 20° limit follows NASA's lunar suit requirement, which is for the Moon and not Mars.</li>
+            <li>Places marked "Approximate" are estimated from imagery. Only "Official" places use published coordinates.</li>
+            <li>This is a planning aid for study and demonstration, not a flight tool.</li>
+          </ul>
+        </div>
+      </details>
     </div>
   </section>
 
   <section id="credits">
     <div class="eyebrow">Credits</div>
     <h2>Data and sources</h2>
-    <div class="card" style="margin-top:14px">
-      <ul class="clean">
-        <li><strong>Elevation, slope and relief shading:</strong> Calef, F. (2021). <em>Mars 2020 Science Investigation CTX DEM Mosaic.</em> USGS Astrogeology Science Center and NASA Planetary Data System, from Mars Reconnaissance Orbiter CTX images. Public domain. Slope and shading are derived from this model. <a href="https://astrogeology.usgs.gov/search/map/mars_2020_science_investigation_ctx_dem_mosaic" target="_blank" rel="noopener">Source page</a></li>
-        <li><strong>Place names and coordinates</strong> for Jezero, Neretva Vallis, Sava Vallis and Pliva Vallis: IAU Gazetteer of Planetary Nomenclature, USGS Astrogeology. <a href="https://planetarynames.wr.usgs.gov/" target="_blank" rel="noopener">planetarynames.wr.usgs.gov</a></li>
-        <li><strong>Mission context and conditions:</strong> NASA/JPL-Caltech Mars 2020 mission pages and the MEDA instrument team, as linked beside each reading. Landing site and delta context also from DLR (HRSC).</li>
-      </ul>
-    </div>
+    <p class="source-intro">Every map layer and mission detail has a source behind it. Open the field guide to see where Astronav’s terrain, place names, and Mars conditions come from.</p>
+    <details class="source-disclosure">
+      <summary>Explore the data behind Astronav</summary>
+      <div class="source-grid">
+        <article class="source-card">
+          <div class="source-type">01 · Terrain data</div>
+          <h3>Reading the Martian landscape</h3>
+          <p>Elevation comes from Calef’s (2021) <em>Mars 2020 Science Investigation CTX DEM Mosaic</em>, produced by USGS Astrogeology and the NASA Planetary Data System from Mars Reconnaissance Orbiter CTX images. Slope and relief shading are derived from this public-domain model.</p>
+          <a href="https://astrogeology.usgs.gov/search/map/mars_2020_science_investigation_ctx_dem_mosaic" target="_blank" rel="noopener">View the terrain source ↗</a>
+        </article>
+        <article class="source-card">
+          <div class="source-type">02 · Place names</div>
+          <h3>Names mapped to the crater</h3>
+          <p>Jezero and the mapped valleys use place names and coordinates from the IAU Gazetteer of Planetary Nomenclature, maintained by USGS Astrogeology.</p>
+          <a href="https://planetarynames.wr.usgs.gov/" target="_blank" rel="noopener">Browse the planetary gazetteer ↗</a>
+        </article>
+        <article class="source-card">
+          <div class="source-type">03 · Mission context</div>
+          <h3>Weather and exploration</h3>
+          <p>Mission context and conditions come from NASA/JPL-Caltech Mars 2020 mission pages and the MEDA instrument team. Landing-site and delta context also comes from DLR (HRSC). Open the links beside each reading for its specific source.</p>
+        </article>
+      </div>
+    </details>
   </section>
 
-  <section id="about" class="card">
-    <h2>About Astronav</h2>
+  <section id="about" class="about-card">
+    <div class="about-head">
+      <div>
+        <div class="eyebrow">Your Mars mission starts here</div>
+        <h2>About Astronav</h2>
+      </div>
+      <div class="about-orb" aria-hidden="true"></div>
+    </div>
     <div id="about-text"></div>
   </section>
 </main>
@@ -450,7 +549,6 @@
 <footer>
   <div class="wrap">
     <div>Astronav. Guiding humanity's first step on Mars.</div>
-    <div>Built for the NASA International Space Apps Challenge 2026. Not affiliated with or endorsed by NASA.</div>
   </div>
 </footer>
 
@@ -564,7 +662,7 @@ const SURFACE_VIEWS = [];
 
 /* ---------- EDIT HERE 7: the About text (plain text, one string per paragraph) ---------- */
 const ABOUT = [
-  'Astronav is an interactive planning map of Jezero Crater, Mars. It brings terrain, slope, example routes and measured conditions together so the ground can be understood before anyone steps onto it.'
+  'No spacesuit required—just curiosity. Take a virtual field trip across Jezero Crater, the ancient lake basin Perseverance is exploring. Astronav brings real terrain data, slopes, sample routes and rover weather readings together, so you can explore the landscape and imagine what a future Marswalk might involve. It’s a learning map, not mission-control software—Mars is still the boss.'
 ];
 
 /* ===================== Code below: no need to edit ===================== */
@@ -850,6 +948,20 @@ $('#chk-labels').addEventListener('change', e => map.classList.toggle('nolabels'
 
 /* ----- controls: routes ----- */
 const routeList = $('#routelist');
+const mapLegendButtons = [$('#map-routes-btn'), $('#map-key-btn')];
+mapLegendButtons.forEach(button => {
+  button.addEventListener('click', () => {
+    const panel = $('#' + button.getAttribute('aria-controls'));
+    const shouldOpen = panel.hidden;
+    $('#map-routes-panel').hidden = true;
+    $('#map-key-panel').hidden = true;
+    mapLegendButtons.forEach(toggle => toggle.setAttribute('aria-expanded', 'false'));
+    if (shouldOpen) {
+      panel.hidden = false;
+      button.setAttribute('aria-expanded', 'true');
+    }
+  });
+});
 ROUTES.forEach(R => {
   const d = document.createElement('div');
   d.className = 'legendline';
@@ -1120,7 +1232,7 @@ function pinchState() {
   return { mx: (a[0].x + a[1].x) / 2, my: (a[0].y + a[1].y) / 2, d: Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y) || 1 };
 }
 map.addEventListener('pointerdown', e => {
-  if (e.target.closest('.pin') || e.target.closest('.mapui button')) return;
+  if (e.target.closest('.pin') || e.target.closest('.mapui')) return;
   stopAnim();
   try { map.setPointerCapture(e.pointerId); } catch (_) {}
   pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
