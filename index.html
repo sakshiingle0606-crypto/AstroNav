@@ -43,14 +43,14 @@
   .nav a:focus-visible,.btn:focus-visible{outline:2px solid #fff;outline-offset:2px}
 
   /* ---------- Hero ---------- */
-  .hero{background:#000;border-bottom:1px solid var(--line);text-align:center}
-  .hero img{display:block;width:100%;height:340px;object-fit:cover;object-position:center}
-  .intro{position:relative;isolation:isolate;margin:0 0 56px;padding:clamp(48px,7vw,92px) max(20px,calc((100vw - 1280px)/2 + 20px)) 28px;background:linear-gradient(90deg,rgba(6,9,15,.94) 0%,rgba(6,9,15,.82) 42%,rgba(6,9,15,.24) 100%),url("images/jezero-hero.png") center 48%/cover no-repeat;border-bottom:1px solid var(--line)}
-  .intro-layout{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(320px,.85fr);gap:clamp(28px,5vw,72px);align-items:center;max-width:1280px;margin:0 auto}
-  .intro-copy{max-width:690px}
-  .intro h1{max-width:13ch;font-size:clamp(2.4rem,5vw,4.3rem);letter-spacing:-.035em;margin-bottom:1rem;text-shadow:0 2px 24px rgba(0,0,0,.4)}
-  .intro .lead{max-width:64ch;color:#e3e8f2;text-shadow:0 1px 12px rgba(0,0,0,.65)}
-  .stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .hero{background:#000;border-bottom:1px solid var(--line);text-align:center;margin-bottom:22px}
+  .hero img{display:block;width:100%;height:340px;object-fit:cover;object-position:center bottom}
+  .intro{position:relative;isolation:isolate;min-height:clamp(480px,54vw,680px);margin:0 0 56px;padding:32px max(20px,calc((100vw - 1280px)/2 + 20px));background:linear-gradient(0deg,rgba(6,9,15,.84) 0%,rgba(6,9,15,.28) 48%,rgba(6,9,15,.12) 100%),url("images/jezero-hero.png") center 48%/cover no-repeat;border-bottom:1px solid var(--line)}
+  .intro-layout{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(320px,.85fr);grid-template-areas:"copy stats";gap:clamp(28px,5vw,72px);align-items:stretch;min-height:inherit;max-width:1280px;margin:0 auto}
+  .intro-copy{grid-area:copy;align-self:end;max-width:690px;padding:8px 0 8px 22px;border-left:4px solid #8954ff}
+  .intro h1{max-width:13ch;font-size:clamp(2.4rem,5vw,4.3rem);letter-spacing:-.035em;margin-bottom:1rem;text-shadow:0 2px 24px rgba(0,0,0,.7)}
+  .intro .lead{max-width:64ch;color:#f0f2f7;text-shadow:0 1px 12px rgba(0,0,0,.8)}
+  .stats{grid-area:stats;align-self:start;justify-self:end;width:100%;max-width:460px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
   .stat{background:rgba(12,17,27,.82);border:1px solid rgba(220,230,250,.24);border-radius:var(--radius);padding:16px 18px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 10px 24px rgba(0,0,0,.22)}
   .stat b{display:block;font-size:1.7rem;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
   .stat span{color:var(--muted);font-size:.88rem}
@@ -246,11 +246,11 @@
     .controls{order:2}
     .map{height:64vh;min-height:380px}
     .grid2,.grid3,.plan-grid{grid-template-columns:1fr}
-    .intro{padding-top:52px;padding-bottom:24px;background-position:center,58% center}
-    .intro-layout{grid-template-columns:1fr;gap:28px}
+    .intro{min-height:680px;padding:24px 20px 30px;background-position:center,58% center}
+    .intro-layout{grid-template-columns:1fr;grid-template-rows:auto 1fr;grid-template-areas:"stats" "copy";gap:24px}
     .intro-copy{max-width:760px}
     .intro h1{max-width:15ch}
-    .stats{max-width:700px}
+    .stats{max-width:560px}
     .stats{grid-template-columns:repeat(2,1fr)}
     .hero img{height:210px}
     .source-grid{grid-template-columns:1fr}
